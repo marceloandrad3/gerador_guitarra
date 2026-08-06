@@ -60,6 +60,7 @@ function gerarSVG(diagrama,dedos,pestana){
   
   const nums=diagrama.map(v=>{let n=parseInt(String(v));return(!isNaN(n)&&n>0)?n:null}).filter(n=>n!==null);
   const minCasa=nums.length?Math.min(...nums):0;
+  const maxCasa=nums.length?Math.max(...nums):0;
   const temPestana=pestana&&pestana.casa>0;
   
   // LÓGICA DE CASA BASE VISUAL:
@@ -96,6 +97,20 @@ function gerarSVG(diagrama,dedos,pestana){
     casaBaseVisual=0;
     mostrarNut=true;
     mostrarIndicador=false;
+  }
+
+  // CORRECAO GLOBAL (sem hardcoded): a janela visual precisa cobrir a casa
+  // mais alta do shape. Sem isso, casas 6+ eram descartadas no desenho
+  // (cr>c.casas) enquanto os simbolos X/O seguiam o array completo,
+  // gerando "baixo sem ponto" e cordas soantes fantasmas (B/D# shapes 3-8).
+  // Convencao Cifra Club: encostar na casa mais baixa e indicar a casa
+  // inicial quando a janela nao comeca no traste 1.
+  if(casaBaseVisual+c.casas<maxCasa){
+    casaBaseVisual=minCasa-1;
+    if(casaBaseVisual+c.casas<maxCasa)casaBaseVisual=maxCasa-c.casas;
+    mostrarNut=casaBaseVisual===0;
+    mostrarIndicador=casaBaseVisual>0;
+    indicadorCasa=casaBaseVisual+1;
   }
   
   // Nut (linha grossa superior)
