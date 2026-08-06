@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Diagramas de Acordes</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#000;padding:20px}
+h1{text-align:center;margin-bottom:20px;font-size:24px}
+.busca-container{display:flex;justify-content:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+input[type="text"]{padding:10px 15px;font-size:18px;border:2px solid #000;border-radius:4px;width:250px}
+button{padding:10px 20px;font-size:16px;background:#000;color:#fff;border:none;border-radius:4px;cursor:pointer}
+button:hover{background:#333}
+.botoes-rapidos{display:flex;justify-content:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.botoes-rapidos button{font-size:14px;padding:6px 12px;background:#fff;color:#000;border:1px solid #000}
+.botoes-rapidos button:hover{background:#eee}
+.diagramas-container{display:flex;flex-wrap:wrap;justify-content:center;gap:30px;margin-top:20px}
+.card-acorde{border:1px solid #ccc;border-radius:8px;padding:15px;text-align:center;background:#fff}
+.card-acorde h3{margin-bottom:10px;font-size:18px}
+.ver-mais-container{text-align:center;margin-top:20px}
+.ver-mais-btn{background:#fff;color:#000;border:2px solid #000}
+.mensagem{text-align:center;font-size:16px;margin-top:30px;color:#333}
+.badge-dificuldade{display:block;margin:8px auto 0;padding:4px 0;border-radius:12px;font-size:13px;font-weight:bold;color:#fff;text-align:center}
+.nivel-1{background:#1a7a1a}
+.nivel-2{background:#4caf50}
+.nivel-3{background:#e6a817}
+.nivel-4{background:#e65c00}
+.nivel-5{background:#c62828}
+</style>
+</head>
+<body>
+<h1>🎸 Gerador de Diagramas de Acordes</h1>
+<div class="busca-container">
+<input type="text" id="inputAcorde" placeholder="Ex: F#, Am, C7M, B7..." onkeydown="if(event.key==='Enter')buscarAcorde()">
+<button onclick="buscarAcorde()">Buscar</button>
+</div>
+<div class="botoes-rapidos">
+<button onclick="buscarRapido('C')">C</button>
+<button onclick="buscarRapido('D')">D</button>
+<button onclick="buscarRapido('E')">E</button>
+<button onclick="buscarRapido('F')">F</button>
+<button onclick="buscarRapido('G')">G</button>
+<button onclick="buscarRapido('A')">A</button>
+<button onclick="buscarRapido('B')">B</button>
+<button onclick="buscarRapido('Am')">Am</button>
+<button onclick="buscarRapido('Em')">Em</button>
+<button onclick="buscarRapido('F#')">F#</button>
+<button onclick="buscarRapido('B7')">B7</button>
+<button onclick="buscarRapido('C7M')">C7M</button>
+</div>
+<div id="resultado"></div>
+<script>
+const CFG={w:190,h:240,mt:35,ml:32,sc:28,st:35,casas:5,r:11};
+
+function gerarSVG(diagrama,dedos,pestana){
+  const c=CFG;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${c.w}" height="${c.h}" viewBox="0 0 ${c.w} ${c.h}">`;
+  s+=`<rect width="100%" height="100%" fill="#fff"/>`;
+  
+  const nums=diagrama.map(v=>{let n=parseInt(String(v));return(!isNaN(n)&&n>0)?n:null}).filter(n=>n!==null);
+  const minCasa=nums.length?Math.min(...nums):0;
+  const temPestana=pestana&&pestana.casa>0;
+  
+  // LÓGICA DE CASA BASE VISUAL:
+  // - Acorde aberto (minCasa <= 4, sem pestana alta): casaBaseVisual = 0, mostra nut
+  // - Pestana na casa 1: casaBaseVisual = 0, mostra nut
+  // - Pestana na casa 2-3: casaBaseVisual = pestana.casa - 1, MOSTRA NUT + indicador "Xfr"
+  // - Pestana casa >= 4 ou shape alto: casaBaseVisual = minCasa - 1, sem nut, com indicador
+  let casaBaseVisual=0;
+  let mostrarNut=true;
+  let mostrarIndicador=false;
+  let indicadorCasa=0;
+  
+  if(temPestana){
+    if(pestana.casa<=3){
+      // Pestana próxima ao nut: mostra nut + indicador de casa
+      casaBaseVisual=pestana.casa-1;
+      mostrarNut=true;
+      mostrarIndicador=(pestana.casa>1);
+      indicadorCasa=pestana.casa;
+    } else {
+      // Pestana alta no braço
+      casaBaseVisual=pestana.casa-1;
+      mostrarNut=false;
+      mostrarIndicador=true;
+      indicadorCasa=pestana.casa;
+    }
+  } else if(minCasa>4){
+    casaBaseVisual=minCasa-1;
+    mostrarNut=false;
+    mostrarIndicador=true;
+    indicadorCasa=minCasa;
+  } else {
+    // Acorde aberto padrão
+    casaBaseVisual=0;
+    mostrarNut=true;
+    mostrarIndicador=false;
+  }
+  
+  // Nut (linha grossa superior)
+  if(mostrarNut){
+    s+=`<line x1="${c.ml}" y1="${c.mt}" x2="${c.ml+5*c.sc}" y2="${c.mt}" stroke="#000" stroke-width="3"/>`;
+  }
+  
+  // Cordas verticais
+  for(let i=0;i<6;i++){let x=c.ml+i*c.sc;s+=`<line x1="${x}" y1="${c.mt}" x2="${x}" y2="${c.mt+c.casas*c.st}" stroke="#000" stroke-width="1"/>`}
+  
+  // Trastes horizontais
+  for(let t=1;t<=c.casas;t++){let y=c.mt+t*c.st;s+=`<line x1="${c.ml}" y1="${y}" x2="${c.ml+5*c.sc}" y2="${y}" stroke="#000" stroke-width="1"/>`}
+  
+  
+  // Barras: pestana (dedo 1) e mini-pestanas (mesmo dedo, mesma casa,
+  // cordas adjacentes - adjacencia garantida pela regra de dedicao do
+  // backend). Toda barra eh rotulada com o numero do dedo (padrao Cifra
+  // Club); cordas cobertas por barra nao ganham bolinha propria.
+  const barras=[];
+  if(temPestana){
+    barras.push({casa:pestana.casa,cMin:Math.min(...pestana.cordas),cMax:Math.max(...pestana.cordas),dedo:dedos?dedos[pestana.cordas[0]]:1});
+  }
+  if(dedos){
+    const grupos={};
+    for(let i=0;i<6;i++){
+      const casa=parseInt(String(diagrama[i]));
+      if(!dedos[i]||isNaN(casa)||casa<1)continue;
+      if(temPestana&&pestana.cordas.includes(i)&&casa===pestana.casa)continue;
+      const k=dedos[i]+'_'+casa;
+      (grupos[k]=grupos[k]||{dedo:dedos[i],casa:casa,cordas:[]}).cordas.push(i);
+    }
+    for(const k in grupos){
+      const g=grupos[k];
+      if(g.cordas.length>=2){
+        barras.push({casa:g.casa,cMin:Math.min(...g.cordas),cMax:Math.max(...g.cordas),dedo:g.dedo});
+      }
+    }
+  }
+  for(const b of barras){
+    const cr=b.casa-casaBaseVisual;
+    if(cr<1||cr>c.casas)continue;
+    const x1=c.ml+b.cMin*c.sc,x2=c.ml+b.cMax*c.sc,yb=c.mt+(cr-0.5)*c.st;
+    s+=`<rect x="${x1-c.r}" y="${yb-6}" width="${x2-x1+2*c.r}" height="12" rx="3" fill="#000"/>`;
+    s+=`<text x="${(x1+x2)/2}" y="${yb+4}" text-anchor="middle" font-size="11" fill="#fff" font-family="Arial" font-weight="bold">${b.dedo}</text>`;
+  }
+
+  // Bolinhas + dedos (somente cordas fora de qualquer barra)
+  for(let i=0;i<6;i++){
+    const v=String(diagrama[i]);
+    if(v==='X'||v==='x'||v==='0'||v==='-1')continue;
+    const casa=parseInt(v);
+    if(isNaN(casa)||casa<1)continue;
+    if(barras.some(b=>b.casa===casa&&i>=b.cMin&&i<=b.cMax))continue;
+    const cr=casa-casaBaseVisual;
+    if(cr<1||cr>c.casas)continue;
+    const x=c.ml+i*c.sc,y=c.mt+(cr-0.5)*c.st;
+    s+=`<circle cx="${x}" cy="${y}" r="${c.r}" fill="#000"/>`;
+    if(dedos&&dedos[i]>0){
+      s+=`<text x="${x}" y="${y+4}" text-anchor="middle" font-size="12" fill="#fff" font-family="Arial" font-weight="bold">${dedos[i]}</text>`;
+    }
+  }
+
+  // Indicador de casa à esquerda
+  if(mostrarIndicador){
+    s+=`<text x="${c.ml-c.r-6}" y="${c.mt+0.5*c.st+4}" text-anchor="end" font-size="12" font-weight="bold" fill="#000" font-family="Arial">${indicadorCasa}</text>`;
+  }
+  
+  // Indicadores de cordas (padrao Cifra Club) abaixo do diagrama:
+  // X = corda muda | preenchida = baixo do acorde | aberta = demais cordas tocadas
+  const yInd=c.mt+c.casas*c.st+18;
+  let baixoDefinido=false;
+  for(let i=0;i<6;i++){
+    const x=c.ml+i*c.sc;
+    const v=String(diagrama[i]).toUpperCase();
+    if(v==='X'||v==='-1'){
+      s+=`<text x="${x}" y="${yInd+5}" text-anchor="middle" font-size="15" font-weight="bold" fill="#000" font-family="Arial">\u2715</text>`;
+    }else if(!baixoDefinido){
+      baixoDefinido=true;
+      s+=`<circle cx="${x}" cy="${yInd}" r="6" fill="#000"/>`;
+    }else{
+      s+=`<circle cx="${x}" cy="${yInd}" r="6" fill="none" stroke="#000" stroke-width="2"/>`;
+    }
+  }
+
+  s+='</svg>';return s;
+}
+
+function Diagrama(sh,acorde,i){
+  const titulo=(sh.nome_exato||acorde)+(i>0?' (Shape '+(i+1)+')':'');
+  let badge='';
+  if(sh.dificuldade&&sh.dificuldade.nivel){
+    const n=sh.dificuldade.nivel;
+    badge='<div class="badge-dificuldade nivel-'+n+'" style="width:'+CFG.w+'px" title="Score '+sh.dificuldade.score+'/30 - Rubrica ISMIR 2023 (UC/CFP/CFD/RHC)">Dificuldade: '+n+'/5 - '+sh.dificuldade.rotulo+'</div>';
+  }
+  return `<div class="card-acorde"><h3>${titulo}</h3>${gerarSVG(sh.diagrama,sh.dedos,sh.pestana)}${badge}</div>`;
+}
+
+async function buscarAcorde(){
+  const inp=document.getElementById('inputAcorde'),acorde=inp.value.trim();
+  if(!acorde)return;
+  const ct=document.getElementById('resultado');
+  ct.innerHTML='<p class="mensagem">Buscando...</p>';
+  try{
+    const resp=await fetch('/gerar?acorde='+encodeURIComponent(acorde));
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    if(!data.diagramas||!data.diagramas.length){ct.innerHTML='<p class="mensagem">Nenhum diagrama encontrado para "'+acorde+'".</p>';return}
+    data.diagramas.sort(function(a,b){
+      const da=a.dificuldade||{},db=b.dificuldade||{};
+      return ((da.nivel||9)-(db.nivel||9))||((da.score||99)-(db.score||99));
+    });
+    const mostrarTodos=ct.dataset.mostrarTodos==='true';
+    const shapes=mostrarTodos?data.diagramas:data.diagramas.slice(0,1);
+    let h='<div class="diagramas-container">'+shapes.map((sh,i)=>Diagrama(sh,acorde,i)).join('')+'</div>';
+    if(data.total_diagramas>1&&!mostrarTodos)h+='<div class="ver-mais-container"><button class="ver-mais-btn" onclick="document.getElementById(\'resultado\').dataset.mostrarTodos=\'true\';buscarAcorde()">+'+(data.total_diagramas-1)+' variações</button></div>';
+    ct.innerHTML=h;ct.dataset.mostrarTodos=mostrarTodos?'true':'false';
+  }catch(e){ct.innerHTML='<p class="mensagem">Erro: '+e.message+'. Verifique se o servidor está rodando.</p>'}
+}
+function buscarRapido(a){document.getElementById('inputAcorde').value=a;buscarAcorde()}
+</script>
+</body>
+</html>
