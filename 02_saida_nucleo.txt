@@ -1,0 +1,974 @@
+
+########################################################
+### ARQUIVO: servidor.py
+########################################################
+     1	#!/usr/bin/env python3
+     2	"""
+     3	Servidor HTTP para o Gerador Universal de Diagramas de Acordes.
+     4	Serve index.html do diretorio ATUAL e endpoint /gerar
+     5	"""
+     6	
+     7	import os
+     8	import sys
+     9	import json
+    10	import urllib.parse
+    11	from http.server import HTTPServer, BaseHTTPRequestHandler
+    12	
+    13	# Garante que estamos no diretorio correto
+    14	DIR_ATUAL = os.path.dirname(os.path.abspath(__file__))
+    15	os.chdir(DIR_ATUAL)
+    16	
+    17	# Importa o gerador do diretorio atual
+    18	sys.path.insert(0, DIR_ATUAL)
+    19	from gerador_web_dinamico import gerar_dinamico
+    20	from gerador_web_dinamico import parse_acorde, gerar_shapes_dinamicos
+    21	import sqlite3
+    22	
+    23	
+    24	class Handler(BaseHTTPRequestHandler):
+    25	    def log_message(self, format, *args):
+    26	        # Log colorido para facilitar debug
+    27	        print(f"[SERVIDOR] {self.address_string()} - {format % args}")
+    28	
+    29	    def _send_json(self, data, status=200):
+    30	        self.send_response(status)
+    31	        self.send_header("Content-Type", "application/json; charset=utf-8")
+    32	        # Headers anti-cache para evitar problemas de cache
+    33	        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+    34	        self.send_header("Pragma", "no-cache")
+    35	        self.send_header("Expires", "0")
+    36	        self.end_headers()
+    37	        self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+    38	
+    39	    def _send_html(self, html_bytes, status=200):
+    40	        self.send_response(status)
+    41	        self.send_header("Content-Type", "text/html; charset=utf-8")
+    42	        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+    43	        self.send_header("Pragma", "no-cache")
+    44	        self.send_header("Expires", "0")
+    45	        self.end_headers()
+    46	        self.wfile.write(html_bytes)
+    47	
+    48	    def _send_error(self, message, status=400):
+    49	        self._send_json({"erro": message}, status)
+    50	
+    51	    def do_GET(self):
+    52	        parsed = urllib.parse.urlparse(self.path)
+    53	        path = parsed.path
+    54	        query = urllib.parse.parse_qs(parsed.query)
+    55	
+    56	        if path == "/gerar":
+    57	            acorde = query.get("acorde", [""])[0].strip()
+    58	            if not acorde:
+    59	                self._send_error("Parametro 'acorde' obrigatorio", 400)
+    60	                return
+    61	            try:
+    62	                resultado = gerar_dinamico(acorde)
+    63	                self._send_json(resultado)
+    64	            except Exception as e:
+    65	                self._send_error(str(e), 500)
+    66	            return
+    67	
+    68	        if path == "/auditoria":
+    69	            self._send_json(gerar_relatorio_auditoria())
+    70	            return
+    71	
+    72	        if path == "/" or path == "/index.html":
+    73	            index_path = os.path.join(DIR_ATUAL, "index.html")
+    74	            if os.path.exists(index_path):
+    75	                with open(index_path, "rb") as f:
+    76	                    self._send_html(f.read())
+    77	            else:
+    78	                self._send_error(f"index.html nao encontrado em: {index_path}", 404)
+    79	            return
+    80	
+    81	        # 404 para tudo o mais
+    82	        self._send_error(f"Rota nao encontrada: {path}", 404)
+    83	
+    84	
+    85	def gerar_relatorio_auditoria():
+    86	    """Le o banco ao vivo e compara as 3 fontes: nosso gerador, JGuitar e Caged."""
+    87	    con = sqlite3.connect(os.path.join(DIR_ATUAL, "auditoria.db"))
+    88	    cur = con.cursor()
+    89	    cur.execute("SELECT acorde, shape, gerado_por FROM auditoria")
+    90	    por_acorde = {}
+    91	    for acorde, shape, gerado_por in cur.fetchall():
+    92	        grupos = por_acorde.setdefault(acorde, {"nosso": set(), "jguitar": set()})
+    93	        forma = tuple(p.strip().upper() for p in shape.split(","))
+    94	        if gerado_por in ("nosso", "ambos"):
+    95	            grupos["nosso"].add(forma)
+    96	        if gerado_por in ("jguitar", "ambos"):
+    97	            grupos["jguitar"].add(forma)
+    98	    con.close()
+    99	
+   100	    linhas = []
+   101	    for acorde in sorted(por_acorde):
+   102	        grupos = por_acorde[acorde]
+   103	        tem_nosso = bool(grupos["nosso"])
+   104	        tem_jguitar = bool(grupos["jguitar"])
+   105	        tonica, tipo = parse_acorde(acorde)
+   106	        shapes_caged = {tuple(s["casas"]) for s in gerar_shapes_dinamicos(tonica, tipo)}
+   107	        tem_caged = bool(shapes_caged)
+   108	        validado = (
+   109	            tem_nosso
+   110	            and tem_jguitar
+   111	            and tem_caged
+   112	            and grupos["nosso"] == grupos["jguitar"]
+   113	            and shapes_caged.issubset(grupos["nosso"])
+   114	        )
+   115	        linhas.append({
+   116	            "acorde": acorde,
+   117	            "nosso": tem_nosso,
+   118	            "jguitar": tem_jguitar,
+   119	            "caged": tem_caged,
+   120	            "validado": validado,
+   121	        })
+   122	    return {"acordes": linhas}
+   123	
+   124	
+   125	def run(port=8000):
+   126	    print(f"=" * 60)
+   127	    print(f" GERADOR DE ACORDES - SERVIDOR")
+   128	    print(f"=" * 60)
+   129	    print(f" Diretorio de trabalho: {DIR_ATUAL}")
+   130	    print(f" index.html esperado em: {os.path.join(DIR_ATUAL, 'index.html')}")
+   131	    print(f" Endpoint: http://localhost:{port}/gerar?acorde=C")
+   132	    print(f" Frontend: http://localhost:{port}/")
+   133	    print(f"=" * 60)
+   134	    server = HTTPServer(("", port), Handler)
+   135	    print(f" Servidor rodando na porta {port}...")
+   136	    print(f" Pressione Ctrl+C para parar.")
+   137	    print(f"=" * 60)
+   138	    try:
+   139	        server.serve_forever()
+   140	    except KeyboardInterrupt:
+   141	        print("\n Servidor encerrado.")
+   142	
+   143	
+   144	if __name__ == "__main__":
+   145	    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
+   146	    run(port)
+
+########################################################
+### ARQUIVO: gerador_web_dinamico.py
+########################################################
+     1	"""
+     2	Gerador Dinâmico de Acordes - Backend
+     3	Regra de ordenação (padrão Cifra Club / JustinGuitar / CAGED):
+     4	1º Shape aberto canônico (se existir no catálogo)
+     5	2º Shapes abertos gerados (casa 0, sem pestana)
+     6	3º Pestana mais baixa
+     7	4º Demais por casa crescente
+     8	Empate: menor soma de casas
+     9	
+    10	PREMISSA FUNDAMENTAL - DEDICAÇÃO DE ACORDES (NUNCA VIOLAR):
+    11	==========================================================
+    12	1. Cada dedo (1,2,3,4) pode pressionar NO MÁXIMO uma corda, EXCETO quando
+    13	   forma uma pestana (mini ou full) em cordas ADJACENTES na mesma casa.
+    14	2. Cordas NÃO ADJACENTES na mesma casa PRECISAM de dedos DIFERENTES.
+    15	3. Pestana (dedo 1) cobre da primeira à última corda tocada (full barre),
+    16	   não apenas as cordas que estão exatamente na casa da pestana.
+    17	4. Shapes canônicos hardcoded também devem respeitar estas regras.
+    18	==========================================================
+    19	"""
+    20	
+    21	DEDILHADOS_CANONICOS = {
+    22	    "C":  {"diagrama": ["X","3","2","0","1","0"], "dedos": [0,3,2,0,1,0], "pestana": None},
+    23	    "D":  {"diagrama": ["X","X","0","2","3","2"], "dedos": [0,0,0,2,3,1], "pestana": None},
+    24	    "E":  {"diagrama": ["0","2","2","1","0","0"], "dedos": [0,2,3,1,0,0], "pestana": None},
+    25	    "F":  {"diagrama": ["1","3","3","2","1","1"], "dedos": [1,3,4,2,1,1], "pestana": {"casa":1,"cordas":[0,1,2,3,4,5]}},
+    26	    "G":  {"diagrama": ["3","2","0","0","0","3"], "dedos": [3,2,0,0,0,4], "pestana": None},
+    27	    "A":  {"diagrama": ["X","0","2","2","2","0"], "dedos": [0,0,1,2,3,0], "pestana": None},
+    28	    "B":  {"diagrama": ["X","2","4","4","4","2"], "dedos": [0,1,2,3,4,1], "pestana": {"casa":2,"cordas":[1,2,3,4,5]}},
+    29	    "Am": {"diagrama": ["X","0","2","2","1","0"], "dedos": [0,0,2,3,1,0], "pestana": None},
+    30	    "Em": {"diagrama": ["0","2","2","0","0","0"], "dedos": [0,2,3,0,0,0], "pestana": None},
+    31	    "Dm": {"diagrama": ["X","X","0","2","3","1"], "dedos": [0,0,0,2,3,1], "pestana": None},
+    32	    "B7": {"diagrama": ["X","2","1","2","0","2"], "dedos": [0,2,1,3,0,4], "pestana": None},
+    33	    "C7": {"diagrama": ["X","3","2","3","1","0"], "dedos": [0,3,2,4,1,0], "pestana": None},
+    34	    "C7M":{"diagrama": ["X","3","2","0","0","0"], "dedos": [0,3,2,0,0,0], "pestana": None},
+    35	    "C9": {"diagrama": ["X","3","2","3","3","X"], "dedos": [0,2,1,3,4,0], "pestana": None},
+    36	    "F#": {"diagrama": ["2","4","4","3","2","2"], "dedos": [1,3,4,2,1,1], "pestana": {"casa":2,"cordas":[0,1,2,3,4,5]}},
+    37	    "G#": {"diagrama": ["4","6","6","5","4","4"], "dedos": [1,3,4,2,1,1], "pestana": {"casa":4,"cordas":[0,1,2,3,4,5]}},
+    38	    "Bb": {"diagrama": ["X","1","3","3","3","1"], "dedos": [0,1,2,3,4,1], "pestana": {"casa":1,"cordas":[1,2,3,4,5]}},
+    39	    # --- Inversoes canonicas (fonte: Wikipedia "Guitar chord" / "Slash chord") ---
+    40	    "C/G":  {"diagrama": ["3","3","2","0","1","0"], "dedos": [3,3,2,0,1,0], "pestana": None},
+    41	    "C/E":  {"diagrama": ["0","3","2","0","1","0"], "dedos": [0,3,2,0,1,0], "pestana": None},
+    42	    "G/D":  {"diagrama": ["X","X","0","0","0","3"], "dedos": [0,0,0,0,0,3], "pestana": None},
+    43	    "Am/E": {"diagrama": ["0","0","2","2","1","0"], "dedos": [0,0,2,3,1,0], "pestana": None},
+    44	    "D/F#": {"diagrama": ["2","X","0","2","3","2"], "dedos": [1,0,0,2,3,4], "pestana": None},
+    45	    "Em/G": {"diagrama": ["3","2","2","0","0","0"], "dedos": [3,1,2,0,0,0], "pestana": None},
+    46	}
+    47	
+    48	NOTAS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+    49	CORDAS_AFINACAO = [40,45,50,55,59,64]
+    50	
+    51	from dedicacao import calcular_dedos_e_pestana, shape_tocavel
+    52	from validacao import shape_valido, diagrama_valido
+    53	from dificuldade import avaliar_dificuldade
+    54	
+    55	def parse_acorde(nome):
+    56	    nome = nome.strip()
+    57	    if len(nome) >= 2 and nome[1] in ['#','b']:
+    58	        tonica = nome[:2]
+    59	        tipo = nome[2:] if len(nome)>2 else ""
+    60	    else:
+    61	        tonica = nome[:1]
+    62	        tipo = nome[1:] if len(nome)>1 else ""
+    63	    bemol_map = {"Db":"C#","Eb":"D#","Gb":"F#","Ab":"G#","Bb":"A#"}
+    64	    tonica = bemol_map.get(tonica, tonica)
+    65	    return tonica, tipo
+    66	
+    67	def parsear_inversao(nome_acorde):
+    68	    """Separa acorde e nota do baixo em acordes tipo C/G."""
+    69	    if '/' in nome_acorde:
+    70	        partes = nome_acorde.split('/')
+    71	        if len(partes) == 2 and len(partes[1]) <= 2:
+    72	            return partes[0], partes[1].strip()
+    73	    return nome_acorde, None
+    74	
+    75	def filtrar_por_baixo(shapes, nota_baixo_str):
+    76	    """Filtra shapes onde a corda mais grave tocada e a nota do baixo."""
+    77	    if not nota_baixo_str or not shapes:
+    78	        return shapes
+    79	    try:
+    80	        idx_baixo = NOTAS.index(nota_baixo_str.upper())
+    81	    except ValueError:
+    82	        return []
+    83	    resultados = []
+    84	    for s in shapes:
+    85	        diag = s['diagrama']
+    86	        nota_mais_grave_idx = None
+    87	        for i, val in enumerate(diag):
+    88	            if str(val) not in ('X', 'x', '-1'):
+    89	                nota_real = (CORDAS_AFINACAO[i] + int(val)) % 12
+    90	                nota_mais_grave_idx = nota_real
+    91	                break
+    92	        if nota_mais_grave_idx is not None and nota_mais_grave_idx == idx_baixo:
+    93	            resultados.append(s)
+    94	    return resultados
+    95	
+    96	def normalizar_tipo(tipo):
+    97	    """Notacoes equivalentes da nona de dominante: 7(9) = 7/9 = 9."""
+    98	    return "9" if tipo in ("7(9)", "7/9", "9") else tipo
+    99	
+   100	BEMOL_INVERSO = {"C#":"Db","D#":"Eb","F#":"Gb","G#":"Ab","A#":"Bb"}
+   101	
+   102	def nome_para_catalogo(tonica, tipo):
+   103	    """Retorna o nome correto para busca no catalogo (trata Bb vs A#)."""
+   104	    nome = tonica + tipo
+   105	    if nome in DEDILHADOS_CANONICOS:
+   106	        return nome
+   107	    alt = BEMOL_INVERSO.get(tonica, tonica) + tipo
+   108	    if alt in DEDILHADOS_CANONICOS:
+   109	        return alt
+   110	    return nome
+   111	
+   112	
+   113	def get_intervalos(tipo):
+   114	    tipos = {
+   115	        "":       [0,4,7],
+   116	        "m":      [0,3,7],
+   117	        "7":      [0,4,7,10],
+   118	        "m7":     [0,3,7,10],
+   119	        "7M":     [0,4,7,11],
+   120	        "m7M":    [0,3,7,11],
+   121	        "dim":    [0,3,6],
+   122	        "dim7":   [0,3,6,9],
+   123	        "aug":    [0,4,8],
+   124	        "sus2":   [0,2,7],
+   125	        "sus4":   [0,5,7],
+   126	        "6":      [0,4,7,9],
+   127	        "m6":     [0,3,7,9],
+   128	        "9":      [0,4,7,10,14],
+   129	        "add9":   [0,4,7,14],
+   130	    }
+   131	    return tipos.get(tipo)
+   132	
+   133	
+   134	CAGED_MAIOR = {
+   135	    "E": {"raiz_corda": 0, "offsets": [0, 2, 2, 1, 0, 0]},
+   136	    "A": {"raiz_corda": 1, "offsets": [None, 0, 2, 2, 2, 0]},
+   137	    "D": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 3, 2]},
+   138	    "C": {"raiz_corda": 1, "offsets": [None, 0, -1, -3, -2, -3]},
+   139	    "G": {"raiz_corda": 0, "offsets": [0, -1, -3, -3, -3, 0]},
+   140	    "G_var1": {"raiz_corda": 0, "offsets": [0, -1, -3, -3, 0, None]},  # var G: 2a corda na raiz, 1a omitida (auditoria JGuitar id=6)
+   141	}
+   142	
+   143	CAGED_MENOR = {
+   144	    "Em": {"raiz_corda": 0, "offsets": [0, 2, 2, 0, 0, 0]},
+   145	    "Am": {"raiz_corda": 1, "offsets": [None, 0, 2, 2, 1, 0]},
+   146	    "Dm": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 3, 1]},
+   147	    "Cm": {"raiz_corda": 1, "offsets": [None, 0, -2, -3, -2, 0]},   # Cm X31013 (C-shape menor: 3a rebaixada, forma padrao de dicionario)
+   148	    "Gm": {"raiz_corda": 0, "offsets": [0, -2, -3, -3, 0, 0]},      # Gm 310033 (G-shape menor: 3a rebaixada p/ Bb na 5a corda)
+   149	}
+   150	
+   151	# Templates por qualidade - offsets derivados das casas confirmadas na
+   152	# Wikipedia "Guitar chord" (acorde-fonte citado em cada linha).
+   153	CAGED_DOMINANTE7 = {
+   154	    "E7": {"raiz_corda": 0, "offsets": [0, 2, 0, 1, 0, 0]},          # E7  020100
+   155	    "A7": {"raiz_corda": 1, "offsets": [None, 0, 2, 0, 2, 0]},       # A7  X02020
+   156	    "D7": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 1, 2]},    # D7  XX0212
+   157	    "G7": {"raiz_corda": 0, "offsets": [0, -1, -3, -3, -3, -2]},     # G7  320001
+   158	    "C7": {"raiz_corda": 1, "offsets": [None, 0, -1, 0, -2, -3]},    # C7  X32310     # G7  320001
+   159	}
+   160	
+   161	CAGED_DOMINANTE9 = {
+   162	    "C9": {"raiz_corda": 1, "offsets": [None, 0, -1, 0, 0, None]},  # C9 X3233X (Cifra Club / Wikipedia Cm9 X3133X c/ 3a maior)
+   163	    "E9": {"raiz_corda": 0, "offsets": [0, 2, 0, 1, 0, 2]},          # E9 020102 (Wikipedia Gm9 353335 c/ 3a maior = G9 353435)
+   164	}
+   165	
+   166	# Diminuto (triade simetrica m3+m3 — Wikipedia "Diminished triad").
+   167	# Shapes-fonte: JGuitar (auditoria 2026-08-06, acorde Cdim), cada offset
+   168	# verificado nota a nota. Transpostos para as 12 tonicas como os demais.
+   169	CAGED_DIM = {
+   170	    "Edim":     {"raiz_corda": 0, "offsets": [0, 1, 2, 0, None, None]},      # 8,9,10,8,X,X
+   171	    "Adim":     {"raiz_corda": 1, "offsets": [None, 0, 1, 2, 1, None]},      # X,3,4,5,4,X
+   172	    "Ddim":     {"raiz_corda": 2, "offsets": [None, None, 0, 1, 3, 1]},      # X,X,10,11,13,11
+   173	    "Ddim_inv": {"raiz_corda": 2, "offsets": [None, None, 0, -2, -3, -2]},   # X,X,10,8,7,8
+   174	    "Gdim":     {"raiz_corda": 3, "offsets": [None, None, None, 0, -1, -3]}, # X,X,X,5,4,2
+   175	}
+   176	
+   177	CAGED_MAIOR7 = {
+   178	    "C7M": {"raiz_corda": 1, "offsets": [None, 0, -1, -3, -3, -3]},  # Cmaj7 X32000
+   179	    "D7M": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 2, 2]},   # Dmaj7 XX0222
+   180	    "E7M": {"raiz_corda": 0, "offsets": [0, 2, 1, 1, 0, 0]},         # Emaj7 021100
+   181	    "G7M": {"raiz_corda": 0, "offsets": [0, -1, -3, -3, -3, -1]},    # Gmaj7 320002
+   182	    "A7M": {"raiz_corda": 1, "offsets": [None, 0, 2, 1, 2, 0]},      # Amaj7 X02120
+   183	    "E7Mc": {"raiz_corda": 0, "offsets": [0, None, 1, 1, 0, None]},   # Gmaj7 3X443X (Cifra Club: E-shape recortado, sem notas dobradas)
+   184	}
+   185	
+   186	CAGED_MENOR7 = {
+   187	    "Em7": {"raiz_corda": 0, "offsets": [0, 2, 0, 0, 0, 0]},         # Em7  020000
+   188	    "Am7": {"raiz_corda": 1, "offsets": [None, 0, 2, 0, 1, 0]},      # Am7  X02010
+   189	    "Dm7": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 1, 1]},   # Dm7  XX0211
+   190	    "Bm7": {"raiz_corda": 1, "offsets": [None, 0, -2, 0, -2, 0]},    # Bm7  X20202
+   191	    "F#m7": {"raiz_corda": 0, "offsets": [0, -2, 0, 0, 0, -2]},      # F#m7 202220
+   192	}
+   193	
+   194	
+   195	
+   196	
+   197	def toleradas_faltando(tonica_idx, intervalos):
+   198	    """Classes de altura cuja ausencia e tolerada no shape.
+   199	
+   200	    Unica tolerancia: a 5a justa (intervalo 7), pratica convencional do
+   201	    violao (Wikipedia "Guitar chord": "the fifth is often omitted").
+   202	    Acordes sem 5a justa (dim/aug) nao recebem tolerancia alguma.
+   203	    """
+   204	    return {(tonica_idx + 7) % 12} if 7 in intervalos else set()
+   205	
+   206	
+   207	def gerar_shapes_dinamicos(tonica, tipo):
+   208	    """Gera os 5 shapes CAGED usando templates verificados com calculo de dedos."""
+   209	    tonica_idx = NOTAS.index(tonica)
+   210	    intervalos = get_intervalos(tipo)
+   211	    if intervalos is None:
+   212	        return []
+   213	    notas_acorde = set((tonica_idx + i) % 12 for i in intervalos)
+   214	    toleradas = toleradas_faltando(tonica_idx, intervalos)
+   215	
+   216	    if tipo in ("m", "menor"):
+   217	        templates = CAGED_MENOR
+   218	        ordem = ["Em", "Am", "Dm", "Cm", "Gm"]
+   219	    elif tipo == "7":
+   220	        templates = CAGED_DOMINANTE7
+   221	        ordem = ["E7", "A7", "D7", "C7", "G7"]
+   222	    elif tipo == "9":
+   223	        templates = CAGED_DOMINANTE9
+   224	        ordem = ["C9", "E9"]
+   225	    elif tipo == "7M":
+   226	        templates = CAGED_MAIOR7
+   227	        ordem = ["C7M", "D7M", "E7M", "E7Mc", "G7M", "A7M"]
+   228	    elif tipo == "m7":
+   229	        templates = CAGED_MENOR7
+   230	        ordem = ["Em7", "Am7", "Dm7", "Bm7", "F#m7"]
+   231	    elif tipo == "dim":
+   232	        templates = CAGED_DIM
+   233	        ordem = ["Edim", "Adim", "Ddim", "Ddim_inv", "Gdim"]
+   234	    else:
+   235	        templates = CAGED_MAIOR
+   236	        ordem = ["E", "A", "D", "C", "G", "G_var1"]
+   237	
+   238	    shapes = []
+   239	    for nome_shape in ordem:
+   240	        tmpl = templates[nome_shape]
+   241	        raiz_corda = tmpl["raiz_corda"]
+   242	        offsets = tmpl["offsets"]
+   243	        afinacao_raiz = CORDAS_AFINACAO[raiz_corda]
+   244	
+   245	        encontrado = False
+   246	        for casa_tonica in range(0, 21):
+   247	            nota_na_casa = (afinacao_raiz + casa_tonica) % 12
+   248	            if nota_na_casa != tonica_idx:
+   249	                continue
+   250	
+   251	            casas = []
+   252	            valido = True
+   253	            for corda_idx in range(6):
+   254	                off = offsets[corda_idx]
+   255	                if off is None:
+   256	                    casas.append(None)
+   257	                else:
+   258	                    c = casa_tonica + off
+   259	                    if c < 0 or c > 20:
+   260	                        valido = False
+   261	                        break
+   262	                    casas.append(c)
+   263	
+   264	            if not valido:
+   265	                continue
+   266	
+   267	            if not shape_valido(casas, CORDAS_AFINACAO, notas_acorde, toleradas):
+   268	                continue
+   269	
+   270	            if not shape_tocavel(casas):
+   271	                continue
+   272	
+   273	            dedos, pestana = calcular_dedos_e_pestana(casas)
+   274	
+   275	            casas_str = ["X" if c is None else str(c) for c in casas]
+   276	            dif = avaliar_dificuldade(casas_str, dedos, pestana, tonica, tipo)
+   277	            diagrama = casas_str
+   278	
+   279	            casas_tocadas = [c for c in casas if c is not None and c > 0]
+   280	            casa_ref = min(casas_tocadas) if casas_tocadas else 0
+   281	            score = casa_ref + (10 if pestana else 0)
+   282	            eh_aberto = (casa_ref == 0 and not pestana)
+   283	
+   284	            shapes.append({
+   285	                "nome": f"{nome_shape} Shape",
+   286	                "casas": casas_str,
+   287	                "dedos": dedos,
+   288	                "pestana": pestana,
+   289	                "diagrama": diagrama,
+   290	                "score": score,
+   291	                "dificuldade": dif,
+   292	                "_casa_base": casa_ref,
+   293	                "_eh_aberto": eh_aberto
+   294	            })
+   295	
+   296	            encontrado = True
+   297	
+   298	    return shapes
+   299	
+   300	
+   301	def ordenar_shapes(shapes, tonica, tipo):
+   302	    nome_completo = nome_para_catalogo(tonica, tipo)
+   303	    canonico = DEDILHADOS_CANONICOS.get(nome_completo)
+   304	    def chave_ordenacao(s):
+   305	        eh_aberto = s.get("_eh_aberto", False) or (s["_casa_base"] == 0 and s["pestana"] is None)
+   306	        casa = s["_casa_base"]
+   307	        score = s["score"]
+   308	        if canonico and s["diagrama"] == canonico["diagrama"]:
+   309	            return (0, 0, 0)
+   310	        if eh_aberto:
+   311	            return (1, 0, score)
+   312	        return (2, casa, score)
+   313	    return sorted(shapes, key=chave_ordenacao)
+   314	
+   315	# Teto de exibicao de slash chords: o gerador construtivo cobre a grade
+   316	# inteira; o UI mostra os N melhores (canonico sempre incluido no teto).
+   317	MAX_DIAGRAMAS_SLASH = 8
+   318	
+   319	
+   320	def gerar_slash_construtivo(tonica, tipo, nota_baixo_str):
+   321	    """Gerador construtivo de slash chords: regra global, sem hardcode por acorde.
+   322	    Fontes: Wikipedia 'Slash chord'/'Inversion (music)' (baixo = nota mais grave;
+   323	    1a inversao = 3a no baixo, 2a = 5a) e anatomia da mao (janela de 5 trastes,
+   324	    mesmo alcance usado no projeto). Para cada uma das 4 cordas mais graves,
+   325	    posiciona o baixo em cada casa viavel e preenche as cordas seguintes apenas
+   326	    com notas do acorde (ou mutadas), aplicando os mesmos portoes do ramo
+   327	    normal: diagrama_valido (sem notas erradas/faltando), >= 4 notas, vao <= 4,
+   328	    shape_tocavel e dedicao via calcular_dedos_e_pestana."""
+   329	    try:
+   330	        idx_baixo = NOTAS.index(nota_baixo_str.upper())
+   331	    except ValueError:
+   332	        return []
+   333	    tonica_idx = NOTAS.index(tonica)
+   334	    intervalos = get_intervalos(tipo)
+   335	    notas_acorde = set((tonica_idx + i) % 12 for i in intervalos)
+   336	    if idx_baixo not in notas_acorde:
+   337	        return []
+   338	    toleradas = toleradas_faltando(tonica_idx, intervalos)
+   339	    resultados = []
+   340	    vistos = set()
+   341	
+   342	    def registrar(diag):
+   343	        diag = _reduzir_voicing_quatro_dedos(diag)
+   344	        chave = tuple(diag)
+   345	        if chave in vistos:
+   346	            return
+   347	        casas = [int(v) for v in diag if v != 'X']
+   348	        if len(casas) < 4 or max(casas) - min(casas) > 4:
+   349	            return
+   350	        if not diagrama_valido(list(diag), CORDAS_AFINACAO, notas_acorde, toleradas):
+   351	            return
+   352	        conv = [None if v == 'X' else int(v) for v in diag]
+   353	        dedos, pestana = calcular_dedos_e_pestana(conv)
+   354	        if dedos and shape_tocavel(conv):
+   355	            vistos.add(chave)
+   356	            resultados.append({'nome': tonica + tipo + '/' + nota_baixo_str,
+   357	                               'diagrama': list(diag),
+   358	                               'dedos': dedos, 'pestana': pestana})
+   359	
+   360	    def preencher(diag, corda, lo, hi):
+   361	        if corda == 6:
+   362	            registrar(diag)
+   363	            return
+   364	        diag[corda] = 'X'  # opcao: mutar esta corda
+   365	        preencher(diag, corda + 1, lo, hi)
+   366	        for casa in range(max(0, lo), min(hi, 14) + 1):  # opcao: tocar na janela
+   367	            if (CORDAS_AFINACAO[corda] + casa) % 12 in notas_acorde:
+   368	                diag[corda] = str(casa)
+   369	                preencher(diag, corda + 1, lo, hi)
+   370	        diag[corda] = 'X'
+   371	
+   372	    for corda_baixo in range(4):
+   373	        for casa_baixo in range(15):
+   374	            if (CORDAS_AFINACAO[corda_baixo] + casa_baixo) % 12 != idx_baixo:
+   375	                continue
+   376	            diag = ['X'] * 6
+   377	            diag[corda_baixo] = str(casa_baixo)
+   378	            preencher(diag, corda_baixo + 1, casa_baixo - 4, casa_baixo + 4)
+   379	
+   380	    # Poda de dominancia: shape cujas cordas tocadas sao subconjunto estrito
+   381	    # de outro (mesmas casas) nao agrega informacao - o musico pode mutar
+   382	    # por conta propria. Excecao: o subconjunto sobrevive quando e
+   383	    # estritamente mais facil (sem pestana vs. com pestana, ou menos
+   384	    # posicoes de dedo) - ex.: x6x477 (estilo Cifra Club) vs. x64477.
+   385	    def tocadas(d):
+   386	        return {i: v for i, v in enumerate(d) if v != 'X'}
+   387	
+   388	    def custo(d):
+   389	        conv = [None if v == 'X' else int(v) for v in d]
+   390	        dedos, pestana = calcular_dedos_e_pestana(conv)
+   391	        return (1 if pestana else 0, len(set(dedos) - {0}))
+   392	
+   393	    finais = []
+   394	    for a in resultados:
+   395	        ta = tocadas(a['diagrama'])
+   396	        ca = custo(a['diagrama'])
+   397	        dominado = any(
+   398	            a is not b
+   399	            and set(ta) < set(tb := tocadas(b['diagrama']))
+   400	            and all(ta[i] == tb[i] for i in ta)
+   401	            and custo(b['diagrama']) <= ca
+   402	            for b in resultados
+   403	        )
+   404	        if not dominado:
+   405	            finais.append(a)
+   406	    return finais
+   407	
+   408	
+   409	def gerar_dinamico(nome_acorde):
+   410	    acorde_base, nota_baixo = parsear_inversao(nome_acorde)
+   411	    # jguitar.com: se o baixo = tonica, a notacao slash e redundante:
+   412	    # trata como o acorde normal (Em/E -> Em), sem caminho de slash.
+   413	    if nota_baixo:
+   414	        _tonica_chk, _ = parse_acorde(acorde_base)
+   415	        if nota_baixo.upper() == _tonica_chk.upper():
+   416	            nota_baixo = None
+   417	            nome_acorde = acorde_base
+   418	    
+   419	    if nota_baixo:
+   420	        tonica, tipo = parse_acorde(acorde_base)
+   421	        tipo = normalizar_tipo(tipo)
+   422	        intervalos = get_intervalos(tipo)
+   423	        if intervalos is None:
+   424	            return {"acorde": nome_acorde, "tonica": tonica, "tipo": tipo,
+   425	                    "diagramas": [], "total_diagramas": 0}
+   426	        diagramas_finais = []
+   427	        # 1. Catalogo canonico primeiro (se existir)
+   428	        diag_canonico = None
+   429	        if nome_acorde in DEDILHADOS_CANONICOS:
+   430	            c = DEDILHADOS_CANONICOS[nome_acorde]
+   431	            dif = avaliar_dificuldade(c["diagrama"], c["dedos"], c.get("pestana"), tonica, tipo)
+   432	            diagramas_finais.append({
+   433	                "nome": nome_acorde,
+   434	                "diagrama": c["diagrama"],
+   435	                "dedos": c["dedos"],
+   436	                "pestana": c.get("pestana"),
+   437	                "score": dif["score"],
+   438	                "dificuldade": dif
+   439	            })
+   440	            diag_canonico = [str(x).upper() for x in c["diagrama"]]
+   441	        # 2. Voicings construtivos como complementares (sem duplicar o canonico)
+   442	        shapes_filtrados = gerar_slash_construtivo(tonica, tipo, nota_baixo)
+   443	        for s in shapes_filtrados:
+   444	            if diag_canonico and [str(x).upper() for x in s['diagrama']] == diag_canonico:
+   445	                continue
+   446	            dif = avaliar_dificuldade(s['diagrama'], s['dedos'], s.get('pestana'), tonica, tipo)
+   447	            diagramas_finais.append({**s, "score": dif['score'], "dificuldade": dif})
+   448	        # 3. Ordenar adaptativos pela MESMA regra do ramo normal
+   449	        #    (ordenar_shapes = fonte unica; canonico fixo em 1o lugar)
+   450	        for s in diagramas_finais:
+   451	            if "_casa_base" not in s:
+   452	                casas = [int(v) for v in s["diagrama"] if str(v) not in ("X", "x", "-1")]
+   453	                s["_casa_base"] = min(casas) if casas else 0
+   454	                s["_eh_aberto"] = any(str(v) == "0" for v in s["diagrama"])
+   455	        inicio = 1 if diag_canonico else 0
+   456	        diagramas_finais[inicio:] = ordenar_shapes(diagramas_finais[inicio:], tonica, tipo)
+   457	        diagramas_finais = diagramas_finais[:MAX_DIAGRAMAS_SLASH]
+   458	        for s in diagramas_finais:
+   459	            s.pop("_casa_base", None)
+   460	            s.pop("_eh_aberto", None)
+   461	        return {
+   462	            "acorde": nome_acorde,
+   463	            "tonica": tonica,
+   464	            "tipo": f"{tipo}/{nota_baixo}",
+   465	            "diagramas": diagramas_finais,
+   466	            "total_diagramas": len(diagramas_finais)
+   467	        }
+   468	
+   469	    tonica, tipo = parse_acorde(nome_acorde)
+   470	    tipo = normalizar_tipo(tipo)
+   471	    intervalos = get_intervalos(tipo)
+   472	    if intervalos is None:
+   473	        return {"acorde": nome_acorde, "tonica": tonica, "tipo": tipo,
+   474	                "diagramas": [], "total_diagramas": 0}
+   475	    tonica_idx = NOTAS.index(tonica)
+   476	    notas_acorde = set((tonica_idx + i) % 12 for i in intervalos)
+   477	    toleradas = toleradas_faltando(tonica_idx, intervalos)
+   478	    shapes = gerar_shapes_dinamicos(tonica, tipo)
+   479	    # Portao unico de confiabilidade: todo shape, de qualquer origem,
+   480	    # so chega ao usuario sem notas erradas e sem notas faltando
+   481	    # (ausencia tolerada apenas para a 5a justa, pratica do violao).
+   482	    shapes = [s for s in shapes if diagrama_valido(s["diagrama"], CORDAS_AFINACAO, notas_acorde, toleradas)]
+   483	    shapes = ordenar_shapes(shapes, tonica, tipo)
+   484	    for s in shapes:
+   485	        s.pop("_casa_base", None)
+   486	        s.pop("_eh_aberto", None)
+   487	    nome_completo = nome_para_catalogo(tonica, tipo)
+   488	    if nome_completo in DEDILHADOS_CANONICOS and diagrama_valido(DEDILHADOS_CANONICOS[nome_completo]["diagrama"], CORDAS_AFINACAO, notas_acorde, toleradas):
+   489	        c = DEDILHADOS_CANONICOS[nome_completo]
+   490	        canonico_shape = {
+   491	            "nome_exato": nome_completo,
+   492	            "diagrama": c["diagrama"],
+   493	            "dedos": c["dedos"],
+   494	            "pestana": c["pestana"],
+   495	            "score": 0,
+   496	            "dificuldade": avaliar_dificuldade(c["diagrama"], c["dedos"], c["pestana"], tonica, tipo)
+   497	        }
+   498	        ja_existe = any(s["diagrama"] == c["diagrama"] for s in shapes)
+   499	        if not ja_existe:
+   500	            shapes.insert(0, canonico_shape)
+   501	        else:
+   502	            shapes = [s for s in shapes if s["diagrama"] != c["diagrama"]]
+   503	            shapes.insert(0, canonico_shape)
+   504	    return {
+   505	        "acorde": nome_acorde,
+   506	        "tonica": tonica,
+   507	        "tipo": tipo,
+   508	        "diagramas": shapes,
+   509	        "total_diagramas": len(shapes)
+   510	    }
+   511	
+   512	if __name__ == "__main__":
+   513	    for teste in ["A", "D", "G", "F#", "B7", "C", "Am", "B"]:
+   514	        r = gerar_dinamico(teste)
+   515	        p = r["diagramas"][0] if r["diagramas"] else {}
+   516	        print(f"{teste}: {p.get('diagrama')} | dedos={p.get('dedos')} | pestana={p.get('pestana')} | total={r['total_diagramas']}")
+   517	def _reduzir_voicing_quatro_dedos(diag):
+   518	    """Omite notas dobradas ate o shape caber em 4 dedos separados.
+   519	
+   520	    Fontes: Wikipedia 'Voicing (music)' (dobramentos sao opcionais),
+   521	    Greg Howlett 'Voicing 101' (evitar dobramento sem motivo) e
+   522	    pratica Cifra Club (B/D# = X6X477). Nunca omite a corda do baixo
+   523	    nem a unica ocorrencia de uma nota do acorde.
+   524	    """
+   525	    from collections import Counter
+   526	    tocadas = [c for c in range(6) if str(diag[c]) not in ("X", "x", "-1")]
+   527	    fretadas = [c for c in tocadas if int(diag[c]) > 0]
+   528	    if len(fretadas) <= 4:
+   529	        return list(diag)
+   530	    casas = {c: int(diag[c]) for c in tocadas}
+   531	    notas = {c: (CORDAS_AFINACAO[c] + casas[c]) % 12 for c in tocadas}
+   532	    contagem = Counter(notas.values())
+   533	    baixo = min(tocadas)
+   534	    mesma_casa = Counter(casas[c] for c in fretadas)
+   535	    candidatas = sorted(
+   536	        (c for c in fretadas if c != baixo and contagem[notas[c]] > 1),
+   537	        key=lambda c: (0 if mesma_casa[casas[c]] > 1 else 1, c))
+   538	    novo = list(diag)
+   539	    restantes = len(fretadas)
+   540	    for c in candidatas:
+   541	        if restantes <= 4:
+   542	            break
+   543	        if contagem[notas[c]] <= 1:
+   544	            continue
+   545	        novo[c] = "X"
+   546	        contagem[notas[c]] -= 1
+   547	        restantes -= 1
+   548	    return novo
+
+########################################################
+### ARQUIVO: dedicacao.py
+########################################################
+     1	"""
+     2	Modulo de dedicacao de acordes de guitarra.
+     3	
+     4	Regras (premissa fundamental do projeto):
+     5	1. Cada dedo (1-4) pressiona no maximo uma corda, exceto pestana.
+     6	2. Pestana (dedo 1): full barre da primeira a ultima corda pressionada
+     7	   na menor casa (so quando fisica: vao completo).
+     8	3. Mini-pestana (cordas adjacentes na mesma casa compartilhando dedo)
+     9	   apenas em ULTIMO CASO, quando dedos separados nao cabem em 4 posicoes.
+    10	4. Cordas NAO adjacentes na mesma casa precisam de dedos diferentes.
+    11	5. Tocabilidade: no maximo 4 posicoes de dedo (pestana conta 1, cada
+    12	   grupo de mini-pestana conta 1). Shapes acima disso sao impossiveis
+    13	   e o gerador deve descarta-los.
+    14	
+    15	Politica de estilo (fundamentada na Wikipedia 'Barre chord', que
+    16	documenta tanto 'one finger frets each string' quanto o barre; e no
+    17	Cifra Club, que usa dedos separados quando cabem):
+    18	R1. <= 4 cordas pressionadas -> dedos separados, sem pestana.
+    19	R2. > 4 cordas -> pestana do dedo 1 (vao completo) + restantes
+    20	    separados, se couber em 4 posicoes.
+    21	R3. Senao -> mini-pestana em adjacentes (ultimo recurso).
+    22	Atribuicao dos dedos: casa crescente, desempate pela corda mais grave.
+    23	"""
+    24	
+    25	
+    26	def _grupos_separados(tocadas):
+    27	    """Um grupo por corda, ordenado por (casa crescente, corda grave)."""
+    28	    return [(c, [i]) for i, c in sorted(tocadas, key=lambda t: (t[1], t[0]))]
+    29	
+    30	
+    31	def _grupos_minimo(casas, tocadas):
+    32	    """Pestana + mini-pestana em adjacentes (ultimo recurso, R3)."""
+    33	    min_casa = min(c for _, c in tocadas)
+    34	    cordas_min = sorted(i for i, c in tocadas if c == min_casa)
+    35	    primeira, ultima = cordas_min[0], cordas_min[-1]
+    36	    vao_completo = all(
+    37	        casas[i] is not None and casas[i] > 0
+    38	        for i in range(primeira, ultima + 1))
+    39	
+    40	    pestana = None
+    41	    if len(cordas_min) >= 2 and vao_completo:
+    42	        pestana = {"casa": min_casa,
+    43	                   "cordas": list(range(primeira, ultima + 1))}
+    44	        resto = [(i, c) for i, c in tocadas if c != min_casa]
+    45	    else:
+    46	        resto = tocadas
+    47	
+    48	    grupos = []
+    49	    for casa_val in sorted({c for _, c in resto}):
+    50	        cordas = sorted(i for i, c in resto if c == casa_val)
+    51	        grupo = [cordas[0]]
+    52	        for i in cordas[1:]:
+    53	            if i == grupo[-1] + 1:
+    54	                grupo.append(i)
+    55	            else:
+    56	                grupos.append((casa_val, grupo))
+    57	                grupo = [i]
+    58	        grupos.append((casa_val, grupo))
+    59	    return pestana, grupos
+    60	
+    61	
+    62	def _grupos_de_dedo(casas):
+    63	    """Fonte unica de verdade da dedicacao (R1-R3).
+    64	
+    65	    Retorna (pestana, grupos): `pestana` e o dict da regra 2 (ou None) e
+    66	    `grupos` e a lista de (casa, [cordas]) onde cada grupo exige um dedo.
+    67	    """
+    68	    tocadas = [(i, c) for i, c in enumerate(casas) if c is not None and c > 0]
+    69	    if not tocadas:
+    70	        return None, []
+    71	
+    72	    # R1: dedos separados cabem -> sem pestana.
+    73	    if len(tocadas) <= 4:
+    74	        return None, _grupos_separados(tocadas)
+    75	
+    76	    min_casa = min(c for _, c in tocadas)
+    77	    cordas_min = sorted(i for i, c in tocadas if c == min_casa)
+    78	    primeira, ultima = cordas_min[0], cordas_min[-1]
+    79	    vao_completo = all(
+    80	        casas[i] is not None and casas[i] > 0
+    81	        for i in range(primeira, ultima + 1))
+    82	    resto = [(i, c) for i, c in tocadas if c != min_casa]
+    83	
+    84	    # R2: pestana + restantes separados, se couber em 4 posicoes.
+    85	    if len(cordas_min) >= 2 and vao_completo and 1 + len(resto) <= 4:
+    86	        return ({"casa": min_casa,
+    87	                 "cordas": list(range(primeira, ultima + 1))},
+    88	                _grupos_separados(resto))
+    89	
+    90	    # R3: ultimo recurso.
+    91	    return _grupos_minimo(casas, tocadas)
+    92	
+    93	
+    94	def shape_tocavel(casas):
+    95	    """True se o shape cabe em 4 dedos (regra 5)."""
+    96	    pestana, grupos = _grupos_de_dedo(casas)
+    97	    return (1 if pestana else 0) + len(grupos) <= 4
+    98	
+    99	
+   100	def calcular_dedos_e_pestana(casas):
+   101	    """Calcula dedos (1-4) e pestana; corda nao tocada recebe 0."""
+   102	    pestana, grupos = _grupos_de_dedo(casas)
+   103	    dedos = [0] * 6
+   104	    if pestana is not None:
+   105	        for i in pestana["cordas"]:
+   106	            if casas[i] == pestana["casa"]:
+   107	                dedos[i] = 1
+   108	    dedo_atual = 2 if pestana else 1
+   109	    for _casa, grupo in sorted(grupos, key=lambda g: (g[0], g[1][0])):
+   110	        if dedo_atual > 4:
+   111	            break
+   112	        for i in grupo:
+   113	            dedos[i] = dedo_atual
+   114	        dedo_atual += 1
+   115	    return dedos, pestana
+
+########################################################
+### ARQUIVO: dificuldade.py
+########################################################
+     1	"""
+     2	Modulo de avaliacao de dificuldade de acordes de guitarra.
+     3	
+     4	Rubrica ISMIR 2023 (Vasquez, Baelemans, Driedger, Zuidema & Burgoyne,
+     5	"Quantifying the Ease of Playing Song Chords on the Guitar", Univ. de
+     6	Amsterda / Chordify). Pesos oficiais: UC=3, CFP=3, CFD=2, RHC=2.
+     7	Cada criterio recebe nivel 0-3. Score maximo = 30.
+     8	
+     9	Operacionalizacao dos criterios (consenso JustinGuitar / Cifra Club):
+    10	  UC  - raridade da tonica/tipo (tonica+tipo comuns = 0; tipo raro = 3)
+    11	  CFP - pestana 5-6 cordas = 3; 3-4 cordas = 2; 2 cordas = 1;
+    12	        acorde aberto confortavel = 0; spread>=4 ou casa>=10 soma +1
+    13	  CFD - 4 dedos ou pestana cheia = 3 (ISMIR "very difficult");
+    14	        3 dedos = 1; pestana 3-4 cordas = 2; pestana 2 cordas = 1
+    15	  RHC - X entre cordas tocadas (mute interno) = 2 ou 3;
+    16	        X so nas bordas = 1; sem X = 0
+    17	
+    18	Faixas: 0-1 Muito Facil | 2-6 Facil | 7-11 Medio | 12-20 Dificil | 21+ Muito Dificil
+    19	"""
+    20	
+    21	TONICAS_COMUNS = {"C", "D", "E", "F", "G", "A", "B"}
+    22	TIPOS_COMUNS = {"", "m", "7", "m7"}
+    23	TIPOS_RAROS = {"dim", "dim7", "aug", "9", "m7M"}
+    24	
+    25	NIVEIS = [
+    26	    (1, 1, "Muito Facil"),
+    27	    (6, 2, "Facil"),
+    28	    (11, 3, "Medio"),
+    29	    (20, 4, "Dificil"),
+    30	    (30, 5, "Muito Dificil"),
+    31	]
+    32	
+    33	
+    34	def _parse(diagrama):
+    35	    casas = []
+    36	    for v in diagrama:
+    37	        try:
+    38	            c = int(v)
+    39	        except (TypeError, ValueError):
+    40	            c = None
+    41	        casas.append(c if c is not None and c >= 0 else None)
+    42	    return casas
+    43	
+    44	
+    45	def _nivel_uc(tonica, tipo):
+    46	    """UC (peso 3): raridade do acorde."""
+    47	    if tipo in TIPOS_RAROS:
+    48	        return 3
+    49	    t_comum = tonica in TONICAS_COMUNS
+    50	    p_comum = tipo in TIPOS_COMUNS
+    51	    if t_comum and p_comum:
+    52	        return 0
+    53	    if t_comum or p_comum:
+    54	        return 1
+    55	    return 2
+    56	
+    57	
+    58	def _nivel_cfp(casas, pestana):
+    59	    """CFP (peso 3): conforto do posicionamento.
+    60	
+    61	    Pestana domina: 5-6 cordas = 3, 3-4 = 2, 2 = 1.
+    62	    Aberto confortavel (corda solta + casas <= 4) = 0.
+    63	    Spread >= 4 ou casa >= 10 soma +1 (teto 3).
+    64	    """
+    65	    pressionadas = [c for c in casas if c is not None and c > 0]
+    66	    if not pressionadas:
+    67	        return 0
+    68	    casa_min = min(pressionadas)
+    69	    spread = max(pressionadas) - casa_min
+    70	    tem_solta = any(c == 0 for c in casas if c is not None)
+    71	
+    72	    if pestana:
+    73	        n = len(pestana.get("cordas", []))
+    74	        nivel = 3 if n >= 5 else (2 if n >= 3 else 1)
+    75	    else:
+    76	        eh_aberto = tem_solta and casa_min <= 4
+    77	        nivel = 0 if eh_aberto else 1
+    78	
+    79	    if spread >= 4:
+    80	        nivel += 1
+    81	    if casa_min >= 10:
+    82	        nivel += 1
+    83	    return min(nivel, 3)
+    84	
+    85	
+    86	def _nivel_cfd(dedos, pestana):
+    87	    """CFD (peso 2): dificuldade de digitacao.
+    88	
+    89	    Sem pestana: <=2 dedos = 0, 3 dedos = 1, 4 dedos = 3
+    90	    (ISMIR: "four-finger chords" = very difficult).
+    91	    Com pestana: 5-6 cordas = 3, 3-4 = 2, 2 = 1
+    92	    (ISMIR: pestana curta tipo A/E = easy).
+    93	    """
+    94	    if pestana:
+    95	        n = len(pestana.get("cordas", []))
+    96	        return 3 if n >= 5 else (2 if n >= 3 else 1)
+    97	    n = len({d for d in dedos if d > 0})
+    98	    if n <= 2:
+    99	        return 0
+   100	    if n == 3:
+   101	        return 1
+   102	    return 3
+   103	
+   104	
+   105	def _nivel_rhc(diagrama):
+   106	    """RHC (peso 2): cordas abafadas.
+   107	
+   108	    X entre cordas tocadas = mute interno (dificil).
+   109	    X so fora do intervalo tocado = mute de borda (facil).
+   110	    """
+   111	    tocadas = [i for i, v in enumerate(diagrama) if str(v) != "X"]
+   112	    x_pos = [i for i, v in enumerate(diagrama) if str(v) == "X"]
+   113	    if not x_pos:
+   114	        return 0
+   115	    if not tocadas:
+   116	        return 3
+   117	    primeira, ultima = min(tocadas), max(tocadas)
+   118	    internas = [i for i in x_pos if primeira < i < ultima]
+   119	    if not internas:
+   120	        return 1
+   121	    if len(internas) == 1:
+   122	        return 2
+   123	    return 3
+   124	
+   125	
+   126	def avaliar_dificuldade(diagrama, dedos=None, pestana=None,
+   127	                        tonica=None, tipo=None):
+   128	    """Avalia dificuldade pela rubrica ISMIR 2023. Score 0-30, nivel 1-5."""
+   129	    casas = _parse(diagrama)
+   130	    pressionadas = [c for c in casas if c is not None and c > 0]
+   131	    if not pressionadas:
+   132	        return {"score": 0, "nivel": 1, "rotulo": "Muito Facil",
+   133	                "detalhes": {"UC": 0, "CFP": 0, "CFD": 0, "RHC": 0}}
+   134	
+   135	    uc  = _nivel_uc(tonica or "C", tipo or "")
+   136	    cfp = _nivel_cfp(casas, pestana)
+   137	    cfd = _nivel_cfd(dedos or [0] * 6, pestana)
+   138	    rhc = _nivel_rhc(diagrama)
+   139	
+   140	    score = uc * 3 + cfp * 3 + cfd * 2 + rhc * 2
+   141	
+   142	    nivel, rotulo = 5, "Muito Dificil"
+   143	    for max_s, n, r in NIVEIS:
+   144	        if score <= max_s:
+   145	            nivel, rotulo = n, r
+   146	            break
+   147	
+   148	    return {"score": score, "nivel": nivel, "rotulo": rotulo,
+   149	            "detalhes": {"UC": uc, "CFP": cfp, "CFD": cfd, "RHC": rhc}}

@@ -59,6 +59,29 @@ def _grupos_minimo(casas, tocadas):
     return pestana, grupos
 
 
+def _esticar_pestana_ate_corda_fina(cordas_pestana, casas):
+    """Regra ergonomica (validada pelo usuario, musico, em 2026-08-07):
+    na vida real o dedo 1 (pestana) naturalmente cobre tambem as cordas
+    mais finas vizinhas quando isso NAO muda o som, porque segurar so
+    as cordas exatas do acorde e' mais dificil e desconfortavel. Isso
+    vale quando a corda vizinha:
+      - esta muda (X) -> nao soa de qualquer jeito, ou
+      - ja esta pressionada por outro dedo em outra casa -> quem decide
+        o som dessa corda e' o dedo mais proximo do corpo do violao,
+        nao o dedo 1 por baixo.
+    So' PARA quando encontra uma corda solta TOCADA (casa 0), porque
+    aí a pestana abafaria uma nota que precisa soar aberta.
+    Nunca estica para o lado da corda mais grossa (regra do usuario)."""
+    cordas = list(cordas_pestana)
+    proxima = max(cordas) + 1
+    while proxima <= 5:
+        if casas[proxima] == 0:
+            break
+        cordas.append(proxima)
+        proxima += 1
+    return cordas
+
+
 def _grupos_de_dedo(casas):
     """Fonte unica de verdade da dedicacao (R1-R3).
 
@@ -83,8 +106,9 @@ def _grupos_de_dedo(casas):
 
     # R2: pestana + restantes separados, se couber em 4 posicoes.
     if len(cordas_min) >= 2 and vao_completo and 1 + len(resto) <= 4:
-        return ({"casa": min_casa,
-                 "cordas": list(range(primeira, ultima + 1))},
+        cordas_pestana = _esticar_pestana_ate_corda_fina(
+            list(range(primeira, ultima + 1)), casas)
+        return ({"casa": min_casa, "cordas": cordas_pestana},
                 _grupos_separados(resto))
 
     # R3: ultimo recurso.

@@ -1,0 +1,350 @@
+[  1] C        nosso=10 jguitar= 6 match= 5 so_nosso= 5 so_jguitar= 1
+[  2] Cm       nosso= 7 jguitar= 6 match= 3 so_nosso= 4 so_jguitar= 3
+[  3] C7       nosso= 7 jguitar= 6 match= 4 so_nosso= 3 so_jguitar= 2
+[  4] Cm7      nosso= 8 jguitar= 6 match= 3 so_nosso= 5 so_jguitar= 3
+[  5] C7M      nosso= 9 jguitar= 6 match= 3 so_nosso= 6 so_jguitar= 3
+[  6] Cm7M     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[  7] Cdim     nosso= 7 jguitar= 6 match= 6 so_nosso= 1 so_jguitar= 0
+[  8] Cdim7    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[  9] Caug     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 10] Csus2    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 11] Csus4    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 12] C6       nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 13] Cm6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 14] C9       nosso= 3 jguitar= 6 match= 2 so_nosso= 1 so_jguitar= 4
+[ 15] Cadd9    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 16] C#       nosso= 8 jguitar= 6 match= 6 so_nosso= 2 so_jguitar= 0
+[ 17] C#m      nosso= 5 jguitar= 6 match= 2 so_nosso= 3 so_jguitar= 4
+[ 18] C#7      nosso= 5 jguitar= 6 match= 3 so_nosso= 2 so_jguitar= 3
+[ 19] C#m7     nosso= 7 jguitar= 6 match= 3 so_nosso= 4 so_jguitar= 3
+[ 20] C#7M     nosso= 8 jguitar= 6 match= 3 so_nosso= 5 so_jguitar= 3
+[ 21] C#m7M    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 22] C#dim    nosso= 7 jguitar= 6 match= 6 so_nosso= 1 so_jguitar= 0
+[ 23] C#dim7   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 24] C#aug    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 25] C#sus2   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 26] C#sus4   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 27] C#6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 28] C#m6     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 29] C#9      nosso= 3 jguitar= 6 match= 3 so_nosso= 0 so_jguitar= 3
+[ 30] C#add9   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 31] D        nosso= 9 jguitar= 6 match= 6 so_nosso= 3 so_jguitar= 0
+[ 32] Dm       nosso= 6 jguitar= 6 match= 3 so_nosso= 3 so_jguitar= 3
+[ 33] D7       nosso= 6 jguitar= 6 match= 4 so_nosso= 2 so_jguitar= 2
+[ 34] Dm7      nosso= 8 jguitar= 6 match= 4 so_nosso= 4 so_jguitar= 2
+[ 35] D7M      nosso= 9 jguitar= 6 match= 4 so_nosso= 5 so_jguitar= 2
+[ 36] Dm7M     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 37] Ddim     nosso= 8 jguitar= 6 match= 6 so_nosso= 2 so_jguitar= 0
+[ 38] Ddim7    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 39] Daug     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 40] Dsus2    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 41] Dsus4    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 42] D6       nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 43] Dm6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 44] D9       nosso= 3 jguitar= 6 match= 3 so_nosso= 0 so_jguitar= 3
+[ 45] Dadd9    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 46] D#       nosso= 9 jguitar= 6 match= 6 so_nosso= 3 so_jguitar= 0
+[ 47] D#m      nosso= 6 jguitar= 6 match= 3 so_nosso= 3 so_jguitar= 3
+[ 48] D#7      nosso= 6 jguitar= 6 match= 3 so_nosso= 3 so_jguitar= 3
+[ 49] D#m7     nosso= 8 jguitar= 6 match= 4 so_nosso= 4 so_jguitar= 2
+[ 50] D#7M     nosso= 9 jguitar= 6 match= 4 so_nosso= 5 so_jguitar= 2
+[ 51] D#m7M    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 52] D#dim    nosso= 8 jguitar= 6 match= 6 so_nosso= 2 so_jguitar= 0
+[ 53] D#dim7   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 54] D#aug    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 55] D#sus2   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 56] D#sus4   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 57] D#6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 58] D#m6     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 59] D#9      nosso= 3 jguitar= 6 match= 3 so_nosso= 0 so_jguitar= 3
+[ 60] D#add9   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 61] E        nosso= 9 jguitar= 6 match= 6 so_nosso= 3 so_jguitar= 0
+[ 62] Em       nosso= 6 jguitar= 6 match= 4 so_nosso= 2 so_jguitar= 2
+[ 63] E7       nosso= 6 jguitar= 6 match= 3 so_nosso= 3 so_jguitar= 3
+[ 64] Em7      nosso= 8 jguitar= 6 match= 1 so_nosso= 7 so_jguitar= 5
+[ 65] E7M      nosso=10 jguitar= 6 match= 5 so_nosso= 5 so_jguitar= 1
+[ 66] Em7M     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 67] Edim     nosso= 7 jguitar= 6 match= 6 so_nosso= 1 so_jguitar= 0
+[ 68] Edim7    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 69] Eaug     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 70] Esus2    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 71] Esus4    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 72] E6       nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 73] Em6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 74] E9       nosso= 4 jguitar= 6 match= 3 so_nosso= 1 so_jguitar= 3
+[ 75] Eadd9    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 76] F        nosso= 9 jguitar= 6 match= 5 so_nosso= 4 so_jguitar= 1
+[ 77] Fm       nosso= 6 jguitar= 6 match= 4 so_nosso= 2 so_jguitar= 2
+[ 78] F7       nosso= 6 jguitar= 6 match= 2 so_nosso= 4 so_jguitar= 4
+[ 79] Fm7      nosso= 8 jguitar= 6 match= 1 so_nosso= 7 so_jguitar= 5
+[ 80] F7M      nosso=10 jguitar= 6 match= 3 so_nosso= 7 so_jguitar= 3
+[ 81] Fm7M     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 82] Fdim     nosso= 8 jguitar= 6 match= 5 so_nosso= 3 so_jguitar= 1
+[ 83] Fdim7    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 84] Faug     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 85] Fsus2    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 86] Fsus4    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 87] F6       nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 88] Fm6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 89] F9       nosso= 4 jguitar= 6 match= 2 so_nosso= 2 so_jguitar= 4
+[ 90] Fadd9    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 91] F#       nosso= 8 jguitar= 6 match= 6 so_nosso= 2 so_jguitar= 0
+[ 92] F#m      nosso= 6 jguitar= 6 match= 4 so_nosso= 2 so_jguitar= 2
+[ 93] F#7      nosso= 6 jguitar= 6 match= 2 so_nosso= 4 so_jguitar= 4
+[ 94] F#m7     nosso= 8 jguitar= 6 match= 2 so_nosso= 6 so_jguitar= 4
+[ 95] F#7M     nosso= 9 jguitar= 6 match= 3 so_nosso= 6 so_jguitar= 3
+[ 96] F#m7M    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 97] F#dim    nosso= 8 jguitar= 6 match= 6 so_nosso= 2 so_jguitar= 0
+[ 98] F#dim7   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[ 99] F#aug    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[100] F#sus2   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[101] F#sus4   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[102] F#6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[103] F#m6     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[104] F#9      nosso= 3 jguitar= 6 match= 3 so_nosso= 0 so_jguitar= 3
+[105] F#add9   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[106] G        nosso=10 jguitar= 6 match= 5 so_nosso= 5 so_jguitar= 1
+[107] Gm       nosso= 7 jguitar= 6 match= 4 so_nosso= 3 so_jguitar= 2
+[108] G7       nosso= 7 jguitar= 6 match= 2 so_nosso= 5 so_jguitar= 4
+[109] Gm7      nosso= 8 jguitar= 6 match= 1 so_nosso= 7 so_jguitar= 5
+[110] G7M      nosso=10 jguitar= 6 match= 3 so_nosso= 7 so_jguitar= 3
+[111] Gm7M     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[112] Gdim     nosso= 8 jguitar= 6 match= 6 so_nosso= 2 so_jguitar= 0
+[113] Gdim7    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[114] Gaug     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[115] Gsus2    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[116] Gsus4    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[117] G6       nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[118] Gm6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[119] G9       nosso= 3 jguitar= 6 match= 2 so_nosso= 1 so_jguitar= 4
+[120] Gadd9    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[121] G#       nosso= 9 jguitar= 6 match= 6 so_nosso= 3 so_jguitar= 0
+[122] G#m      nosso= 6 jguitar= 6 match= 3 so_nosso= 3 so_jguitar= 3
+[123] G#7      nosso= 7 jguitar= 6 match= 2 so_nosso= 5 so_jguitar= 4
+[124] G#m7     nosso= 8 jguitar= 6 match= 1 so_nosso= 7 so_jguitar= 5
+[125] G#7M     nosso=10 jguitar= 6 match= 4 so_nosso= 6 so_jguitar= 2
+[126] G#m7M    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[127] G#dim    nosso= 7 jguitar= 6 match= 6 so_nosso= 1 so_jguitar= 0
+[128] G#dim7   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[129] G#aug    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[130] G#sus2   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[131] G#sus4   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[132] G#6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[133] G#m6     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[134] G#9      nosso= 3 jguitar= 6 match= 3 so_nosso= 0 so_jguitar= 3
+[135] G#add9   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[136] A        nosso=10 jguitar= 6 match= 6 so_nosso= 4 so_jguitar= 0
+[137] Am       nosso= 7 jguitar= 6 match= 3 so_nosso= 4 so_jguitar= 3
+[138] A7       nosso= 7 jguitar= 6 match= 3 so_nosso= 4 so_jguitar= 3
+[139] Am7      nosso= 8 jguitar= 6 match= 2 so_nosso= 6 so_jguitar= 4
+[140] A7M      nosso=10 jguitar= 6 match= 4 so_nosso= 6 so_jguitar= 2
+[141] Am7M     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[142] Adim     nosso= 8 jguitar= 6 match= 6 so_nosso= 2 so_jguitar= 0
+[143] Adim7    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[144] Aaug     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[145] Asus2    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[146] Asus4    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[147] A6       nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[148] Am6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[149] A9       nosso= 3 jguitar= 6 match= 3 so_nosso= 0 so_jguitar= 3
+[150] Aadd9    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[151] A#       nosso=10 jguitar= 6 match= 5 so_nosso= 5 so_jguitar= 1
+[152] A#m      nosso= 7 jguitar= 6 match= 3 so_nosso= 4 so_jguitar= 3
+[153] A#7      nosso= 7 jguitar= 6 match= 3 so_nosso= 4 so_jguitar= 3
+[154] A#m7     nosso= 8 jguitar= 6 match= 2 so_nosso= 6 so_jguitar= 4
+[155] A#7M     nosso=10 jguitar= 6 match= 4 so_nosso= 6 so_jguitar= 2
+[156] A#m7M    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[157] A#dim    nosso= 9 jguitar= 6 match= 5 so_nosso= 4 so_jguitar= 1
+[158] A#dim7   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[159] A#aug    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[160] A#sus2   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[161] A#sus4   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[162] A#6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[163] A#m6     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[164] A#9      nosso= 4 jguitar= 6 match= 2 so_nosso= 2 so_jguitar= 4
+[165] A#add9   nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[166] B        nosso= 9 jguitar= 6 match= 6 so_nosso= 3 so_jguitar= 0
+[167] Bm       nosso= 6 jguitar= 6 match= 2 so_nosso= 4 so_jguitar= 4
+[168] B7       nosso= 7 jguitar= 6 match= 4 so_nosso= 3 so_jguitar= 2
+[169] Bm7      nosso= 8 jguitar= 6 match= 3 so_nosso= 5 so_jguitar= 3
+[170] B7M      nosso= 9 jguitar= 6 match= 3 so_nosso= 6 so_jguitar= 3
+[171] Bm7M     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[172] Bdim     nosso= 7 jguitar= 6 match= 6 so_nosso= 1 so_jguitar= 0
+[173] Bdim7    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[174] Baug     nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[175] Bsus2    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[176] Bsus4    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[177] B6       nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[178] Bm6      nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+[179] B9       nosso= 3 jguitar= 6 match= 3 so_nosso= 0 so_jguitar= 3
+[180] Badd9    nosso= 0 jguitar= 6 match= 0 so_nosso= 0 so_jguitar= 6
+============================================================
+ Acordes auditados:          180
+ Shapes em comum (match):    313
+ So nosso (validar depois):  288
+ So JGuitar (FALHA nossa):   767
+------------------------------------------------------------
+ Acordes com voicings que NAO geramos:
+   C: 1 voicing(s) ausente(s)
+   Cm: 3 voicing(s) ausente(s)
+   C7: 2 voicing(s) ausente(s)
+   Cm7: 3 voicing(s) ausente(s)
+   C7M: 3 voicing(s) ausente(s)
+   Cm7M: 6 voicing(s) ausente(s)
+   Cdim7: 6 voicing(s) ausente(s)
+   Caug: 6 voicing(s) ausente(s)
+   Csus2: 6 voicing(s) ausente(s)
+   Csus4: 6 voicing(s) ausente(s)
+   C6: 6 voicing(s) ausente(s)
+   Cm6: 6 voicing(s) ausente(s)
+   C9: 4 voicing(s) ausente(s)
+   Cadd9: 6 voicing(s) ausente(s)
+   C#m: 4 voicing(s) ausente(s)
+   C#7: 3 voicing(s) ausente(s)
+   C#m7: 3 voicing(s) ausente(s)
+   C#7M: 3 voicing(s) ausente(s)
+   C#m7M: 6 voicing(s) ausente(s)
+   C#dim7: 6 voicing(s) ausente(s)
+   C#aug: 6 voicing(s) ausente(s)
+   C#sus2: 6 voicing(s) ausente(s)
+   C#sus4: 6 voicing(s) ausente(s)
+   C#6: 6 voicing(s) ausente(s)
+   C#m6: 6 voicing(s) ausente(s)
+   C#9: 3 voicing(s) ausente(s)
+   C#add9: 6 voicing(s) ausente(s)
+   Dm: 3 voicing(s) ausente(s)
+   D7: 2 voicing(s) ausente(s)
+   Dm7: 2 voicing(s) ausente(s)
+   D7M: 2 voicing(s) ausente(s)
+   Dm7M: 6 voicing(s) ausente(s)
+   Ddim7: 6 voicing(s) ausente(s)
+   Daug: 6 voicing(s) ausente(s)
+   Dsus2: 6 voicing(s) ausente(s)
+   Dsus4: 6 voicing(s) ausente(s)
+   D6: 6 voicing(s) ausente(s)
+   Dm6: 6 voicing(s) ausente(s)
+   D9: 3 voicing(s) ausente(s)
+   Dadd9: 6 voicing(s) ausente(s)
+   D#m: 3 voicing(s) ausente(s)
+   D#7: 3 voicing(s) ausente(s)
+   D#m7: 2 voicing(s) ausente(s)
+   D#7M: 2 voicing(s) ausente(s)
+   D#m7M: 6 voicing(s) ausente(s)
+   D#dim7: 6 voicing(s) ausente(s)
+   D#aug: 6 voicing(s) ausente(s)
+   D#sus2: 6 voicing(s) ausente(s)
+   D#sus4: 6 voicing(s) ausente(s)
+   D#6: 6 voicing(s) ausente(s)
+   D#m6: 6 voicing(s) ausente(s)
+   D#9: 3 voicing(s) ausente(s)
+   D#add9: 6 voicing(s) ausente(s)
+   Em: 2 voicing(s) ausente(s)
+   E7: 3 voicing(s) ausente(s)
+   Em7: 5 voicing(s) ausente(s)
+   E7M: 1 voicing(s) ausente(s)
+   Em7M: 6 voicing(s) ausente(s)
+   Edim7: 6 voicing(s) ausente(s)
+   Eaug: 6 voicing(s) ausente(s)
+   Esus2: 6 voicing(s) ausente(s)
+   Esus4: 6 voicing(s) ausente(s)
+   E6: 6 voicing(s) ausente(s)
+   Em6: 6 voicing(s) ausente(s)
+   E9: 3 voicing(s) ausente(s)
+   Eadd9: 6 voicing(s) ausente(s)
+   F: 1 voicing(s) ausente(s)
+   Fm: 2 voicing(s) ausente(s)
+   F7: 4 voicing(s) ausente(s)
+   Fm7: 5 voicing(s) ausente(s)
+   F7M: 3 voicing(s) ausente(s)
+   Fm7M: 6 voicing(s) ausente(s)
+   Fdim: 1 voicing(s) ausente(s)
+   Fdim7: 6 voicing(s) ausente(s)
+   Faug: 6 voicing(s) ausente(s)
+   Fsus2: 6 voicing(s) ausente(s)
+   Fsus4: 6 voicing(s) ausente(s)
+   F6: 6 voicing(s) ausente(s)
+   Fm6: 6 voicing(s) ausente(s)
+   F9: 4 voicing(s) ausente(s)
+   Fadd9: 6 voicing(s) ausente(s)
+   F#m: 2 voicing(s) ausente(s)
+   F#7: 4 voicing(s) ausente(s)
+   F#m7: 4 voicing(s) ausente(s)
+   F#7M: 3 voicing(s) ausente(s)
+   F#m7M: 6 voicing(s) ausente(s)
+   F#dim7: 6 voicing(s) ausente(s)
+   F#aug: 6 voicing(s) ausente(s)
+   F#sus2: 6 voicing(s) ausente(s)
+   F#sus4: 6 voicing(s) ausente(s)
+   F#6: 6 voicing(s) ausente(s)
+   F#m6: 6 voicing(s) ausente(s)
+   F#9: 3 voicing(s) ausente(s)
+   F#add9: 6 voicing(s) ausente(s)
+   G: 1 voicing(s) ausente(s)
+   Gm: 2 voicing(s) ausente(s)
+   G7: 4 voicing(s) ausente(s)
+   Gm7: 5 voicing(s) ausente(s)
+   G7M: 3 voicing(s) ausente(s)
+   Gm7M: 6 voicing(s) ausente(s)
+   Gdim7: 6 voicing(s) ausente(s)
+   Gaug: 6 voicing(s) ausente(s)
+   Gsus2: 6 voicing(s) ausente(s)
+   Gsus4: 6 voicing(s) ausente(s)
+   G6: 6 voicing(s) ausente(s)
+   Gm6: 6 voicing(s) ausente(s)
+   G9: 4 voicing(s) ausente(s)
+   Gadd9: 6 voicing(s) ausente(s)
+   G#m: 3 voicing(s) ausente(s)
+   G#7: 4 voicing(s) ausente(s)
+   G#m7: 5 voicing(s) ausente(s)
+   G#7M: 2 voicing(s) ausente(s)
+   G#m7M: 6 voicing(s) ausente(s)
+   G#dim7: 6 voicing(s) ausente(s)
+   G#aug: 6 voicing(s) ausente(s)
+   G#sus2: 6 voicing(s) ausente(s)
+   G#sus4: 6 voicing(s) ausente(s)
+   G#6: 6 voicing(s) ausente(s)
+   G#m6: 6 voicing(s) ausente(s)
+   G#9: 3 voicing(s) ausente(s)
+   G#add9: 6 voicing(s) ausente(s)
+   Am: 3 voicing(s) ausente(s)
+   A7: 3 voicing(s) ausente(s)
+   Am7: 4 voicing(s) ausente(s)
+   A7M: 2 voicing(s) ausente(s)
+   Am7M: 6 voicing(s) ausente(s)
+   Adim7: 6 voicing(s) ausente(s)
+   Aaug: 6 voicing(s) ausente(s)
+   Asus2: 6 voicing(s) ausente(s)
+   Asus4: 6 voicing(s) ausente(s)
+   A6: 6 voicing(s) ausente(s)
+   Am6: 6 voicing(s) ausente(s)
+   A9: 3 voicing(s) ausente(s)
+   Aadd9: 6 voicing(s) ausente(s)
+   A#: 1 voicing(s) ausente(s)
+   A#m: 3 voicing(s) ausente(s)
+   A#7: 3 voicing(s) ausente(s)
+   A#m7: 4 voicing(s) ausente(s)
+   A#7M: 2 voicing(s) ausente(s)
+   A#m7M: 6 voicing(s) ausente(s)
+   A#dim: 1 voicing(s) ausente(s)
+   A#dim7: 6 voicing(s) ausente(s)
+   A#aug: 6 voicing(s) ausente(s)
+   A#sus2: 6 voicing(s) ausente(s)
+   A#sus4: 6 voicing(s) ausente(s)
+   A#6: 6 voicing(s) ausente(s)
+   A#m6: 6 voicing(s) ausente(s)
+   A#9: 4 voicing(s) ausente(s)
+   A#add9: 6 voicing(s) ausente(s)
+   Bm: 4 voicing(s) ausente(s)
+   B7: 2 voicing(s) ausente(s)
+   Bm7: 3 voicing(s) ausente(s)
+   B7M: 3 voicing(s) ausente(s)
+   Bm7M: 6 voicing(s) ausente(s)
+   Bdim7: 6 voicing(s) ausente(s)
+   Baug: 6 voicing(s) ausente(s)
+   Bsus2: 6 voicing(s) ausente(s)
+   Bsus4: 6 voicing(s) ausente(s)
+   B6: 6 voicing(s) ausente(s)
+   Bm6: 6 voicing(s) ausente(s)
+   B9: 3 voicing(s) ausente(s)
+   Badd9: 6 voicing(s) ausente(s)
+============================================================

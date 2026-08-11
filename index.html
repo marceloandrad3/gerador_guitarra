@@ -3,85 +3,339 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f5f7">
 <title>Gerador de Diagramas de Acordes</title>
 <style>
+:root{
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --surface-alt:#fbfbfd;
+  --text:#1d1d1f;
+  --text-secondary:#6e6e73;
+  --accent:#0071e3;
+  --accent-hover:#0077ed;
+  --accent-soft:rgba(0,113,227,.10);
+  --border:rgba(0,0,0,.08);
+  --success:#248a3d;
+  --success-soft:rgba(48,209,88,.13);
+  --danger:#ff3b30;
+  --danger-soft:rgba(255,59,48,.12);
+--warning:#b45f06;
+--warning-soft:rgba(255,159,10,.15);
+
+  --radius-lg:20px;
+  --radius-md:14px;
+  --radius-sm:10px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04),0 1px 1px rgba(0,0,0,.03);
+  --shadow-md:0 6px 20px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
+  --shadow-lg:0 16px 36px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.05);
+  --ease:cubic-bezier(.4,0,.2,1);
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#000;padding:20px}
-h1{text-align:center;margin-bottom:20px;font-size:24px}
-.busca-container{display:flex;justify-content:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-input[type="text"]{padding:10px 15px;font-size:18px;border:2px solid #000;border-radius:4px;width:250px}
-button{padding:10px 20px;font-size:16px;background:#000;color:#fff;border:none;border-radius:4px;cursor:pointer}
-button:hover{background:#333}
-.botoes-rapidos{display:flex;justify-content:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.botoes-rapidos button{font-size:14px;padding:6px 12px;background:#fff;color:#000;border:1px solid #000}
-.botoes-rapidos button:hover{background:#eee}
-.diagramas-container{display:flex;flex-wrap:wrap;justify-content:center;gap:30px;margin-top:20px}
-.card-acorde{border:1px solid #ccc;border-radius:8px;padding:15px;text-align:center;background:#fff}
-.card-acorde h3{margin-bottom:10px;font-size:18px}
-.ver-mais-container{text-align:center;margin-top:20px}
-.ver-mais-btn{background:#fff;color:#000;border:2px solid #000}
-.mensagem{text-align:center;font-size:16px;margin-top:30px;color:#333}
-.badge-dificuldade{display:block;margin:8px auto 0;padding:4px 0;border-radius:12px;font-size:13px;font-weight:bold;color:#fff;text-align:center}
-.nivel-1{background:#1a7a1a}
-.nivel-2{background:#4caf50}
-.nivel-3{background:#e6a817}
-.nivel-4{background:#e65c00}
-.nivel-5{background:#c62828}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:60px;
+}
+button,input{font-family:inherit}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.page-header{text-align:center;padding:48px 20px 8px}
+h1{font-size:32px;font-weight:650;letter-spacing:-0.02em;color:var(--text)}
+.subtitulo{font-size:15px;color:var(--text-secondary);margin-top:6px;font-weight:400}
+
+.tabs-wrap{display:flex;justify-content:center;margin:28px 0 32px}
+.tabs{display:inline-flex;background:#e8e8ed;padding:4px;border-radius:12px;gap:2px}
+.tab-btn{border:none;background:transparent;padding:9px 22px;border-radius:9px;font-weight:590;font-size:14px;color:var(--text-secondary);cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease)}
+.tab-btn.ativa{background:#fff;color:var(--text);box-shadow:var(--shadow-sm)}
+.tab-btn:hover:not(.ativa){color:var(--text)}
+
+.busca-container{max-width:520px;margin:0 auto 18px;display:flex;gap:10px;padding:0 20px}
+input[type="text"]{
+  flex:1;padding:14px 18px;font-size:16px;color:var(--text);
+  border:1px solid var(--border);border-radius:14px;background:var(--surface);
+  box-shadow:var(--shadow-sm);transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+}
+input[type="text"]::placeholder{color:#a1a1a6}
+input[type="text"]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+button{
+  padding:14px 26px;font-size:15px;font-weight:590;background:var(--accent);color:#fff;
+  border:none;border-radius:14px;cursor:pointer;transition:background .2s var(--ease),transform .1s var(--ease);
+  white-space:nowrap;
+}
+button:hover{background:var(--accent-hover)}
+button:active{transform:scale(.97)}
+
+.botoes-rapidos{max-width:640px;margin:0 auto 36px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:0 20px}
+.botoes-rapidos button{
+  font-size:14px;padding:8px 18px;background:var(--surface);color:var(--text);
+  border:1px solid var(--border);border-radius:20px;font-weight:500;box-shadow:var(--shadow-sm);
+}
+.botoes-rapidos button:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.botoes-rapidos button:active{transform:scale(.96)}
+
+#resultado{max-width:1040px;margin:0 auto 40px;padding:0 20px;min-height:20px}
+.diagramas-container{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.card-acorde{
+  position:relative;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:12px 14px 12px;text-align:center;box-shadow:var(--shadow-md);
+  transition:transform .25s var(--ease),box-shadow .25s var(--ease);
+}
+.card-acorde:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.card-acorde h3{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:2px}
+
+.selo-validacao{
+  position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;
+  box-shadow:0 0 0 2px var(--surface);
+}
+.selo-validacao.ok{background:#30d158}
+.selo-validacao.nao{background:#ff453a}
+.selo-validacao.pendente{background:#c7c7cc}
+
+.aviso-ambiguidade{
+  max-width:600px;margin:0 auto 20px;padding:14px 18px;background:#fff8e6;
+  border:1px solid #ffd60a;border-radius:12px;font-size:13px;color:#6e5a00;
+  line-height:1.5;
+}
+.familia-header{
+  width:100%;flex-basis:100%;font-size:13px;font-weight:700;color:#1d1d1f;
+  text-transform:uppercase;letter-spacing:.4px;margin:20px 0 8px;
+  padding-top:8px;border-top:1px solid #d2d2d7;
+}
+.aka-nomes{
+  font-size:11px;color:#86868b;text-align:center;padding:4px 10px 0;
+  font-style:italic;line-height:1.4;
+}
+.badge-dificuldade{
+  display:inline-block;margin-top:4px;padding:4px 10px;border-radius:14px;
+  font-size:10px;font-weight:600;letter-spacing:.01em;white-space:nowrap;
+}
+.nivel-1{background:var(--success-soft);color:#248a3d}
+.nivel-2{background:rgba(88,197,120,.15);color:#1c7a3f}
+.nivel-3{background:rgba(255,183,10,.18);color:#a5710a}
+.nivel-4{background:rgba(255,149,10,.16);color:#c1690a}
+.nivel-5{background:var(--danger-soft);color:#d70015}
+
+.linha-shapes-detalhe{background:#fafafa}
+.linha-shapes-detalhe td{padding:0!important}
+.arvore-shapes{padding:10px 14px 14px 42px;font-size:12.5px}
+.arvore-item{
+  display:flex;align-items:center;gap:8px;padding:5px 0;
+  border-bottom:1px solid var(--border);
+}
+.arvore-item:last-child{border-bottom:none}
+.arvore-ponto{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.arvore-ponto.ok{background:#30d158}
+.arvore-ponto.nao{background:#ff453a}
+.arvore-shape-posicao{
+  font-size:11px;font-weight:600;color:#6e6e73;min-width:82px;flex:0 0 auto;
+  background:#eef0f2;border-radius:8px;padding:2px 8px;text-align:center;
+}
+.arvore-shape-codigo{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:#1d1d1f;min-width:150px}
+.arvore-motivo{color:#6e6e73;flex:1}
+.arvore-motivo b{color:#1d1d1f;font-weight:600}
+.toggle-arvore{cursor:pointer;user-select:none;display:inline-block;width:14px;text-align:center;color:#a1a1a6;font-size:11px}
+
+.ver-mais-container{text-align:center;margin:32px 0}
+.ver-mais-btn{
+  background:var(--surface);color:var(--accent);border:1px solid var(--border);
+  border-radius:14px;padding:12px 26px;font-weight:590;box-shadow:var(--shadow-sm);
+}
+.ver-mais-btn:hover{background:var(--accent-soft)}
+
+.mensagem{text-align:center;font-size:15px;color:var(--text-secondary);margin-top:36px;line-height:1.6}
+
+.aud-topo{max-width:1040px;margin:0 auto;padding:0 20px}
+.aud-titulo{font-size:13px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:8px 0 4px}
+.aud-contadores{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0 18px}
+.aud-chip{padding:8px 16px;border-radius:20px;font-weight:600;font-size:13px}
+.chip-ok{background:var(--success-soft);color:var(--success)}
+.chip-erro{background:var(--danger-soft);color:var(--danger)}
+.chip-pct{background:var(--accent-soft);color:var(--accent)}
+.aud-contadores button{margin-left:auto;padding:9px 18px;font-size:13px;border-radius:12px}
+
+.aud-filtros{display:flex;gap:8px;align-items:center;margin-bottom:20px;font-size:13px;color:var(--text-secondary)}
+.aud-filtros button{
+  padding:7px 16px;border:1px solid var(--border);background:var(--surface);
+  border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);
+  transition:background .2s var(--ease),color .2s var(--ease);
+}
+.aud-filtros button.ativo{background:var(--text);color:#fff;border-color:var(--text)}
+
+.aud-tabela-wrap{max-width:1040px;margin:0 auto 40px;padding:0 20px;overflow-x:auto}
+table.aud{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border)}
+table.aud th{background:var(--surface-alt);color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:650;padding:12px 14px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+table.aud td{padding:11px 14px;border-bottom:1px solid var(--border);text-align:center;font-size:14px}
+table.aud tbody tr:last-child td{border-bottom:none}
+table.aud tbody tr{transition:background .15s var(--ease)}
+table.aud tbody tr:hover{background:var(--surface-alt)}
+table.aud td.clicavel{cursor:pointer;transition:background .15s var(--ease),color .15s var(--ease)}
+table.aud td.clicavel:hover{background:var(--accent-soft);color:var(--accent)}
+.tick-ok{color:#248a3d;font-weight:700}
+.tick-x{color:#ff3b30;font-weight:700}
+
+.cov-topo{max-width:900px;margin:0 auto;padding:0 20px}
+.cov-resumo{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0 28px}
+.cov-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px 22px;box-shadow:var(--shadow-sm);flex:1;min-width:160px}
+.cov-card .cov-num{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.cov-card .cov-label{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.cov-lista{max-width:900px;margin:0 auto 40px;padding:0 20px}
+.cov-item{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:8px;box-shadow:var(--shadow-sm)}
+.cov-item.prioritario{border-color:#ff9f0a;background:rgba(255,159,10,.06)}
+.cov-item .cov-nome{font-weight:600;font-size:14px}
+.cov-item .cov-suffix{font-size:12px;color:var(--text-secondary);margin-left:8px}
+.cov-badge-prioridade{font-size:11px;font-weight:700;color:#c1690a;background:rgba(255,159,10,.18);padding:3px 10px;border-radius:12px}
+
+@media (max-width:600px){
+  h1{font-size:26px}
+  .busca-container{flex-direction:column}
+  .aud-contadores button{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+}
+
+.painel-resumo{max-width:1040px;margin:16px auto 14px;padding:0 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.painel-busca{max-width:1040px;margin:0 auto 18px;padding:0 20px}
+.painel-busca input{width:100%;max-width:340px;padding:10px 14px;border-radius:12px;border:1px solid var(--border);font-size:14px;font-family:inherit}
+.painel-lista{max-width:1040px;margin:0 auto 40px;padding:0 20px}
+.painel-acorde{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.painel-acorde-header{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;transition:background .15s var(--ease)}
+.painel-acorde-header:hover{background:var(--surface-alt)}
+.painel-acorde-seta{font-size:11px;color:var(--text-secondary);width:12px;flex:0 0 auto}
+.painel-acorde-nome{font-weight:650;font-size:15px;min-width:70px}
+.painel-acorde-count{color:var(--text-secondary);font-size:13px;margin-left:auto}
+.painel-shapes{display:none;border-top:1px solid var(--border);padding:6px 16px 10px 42px}
+.painel-shapes.aberto{display:block}
+.painel-shape-row{display:flex;align-items:center;gap:14px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;cursor:pointer;transition:color .15s var(--ease)}
+.painel-shape-row:last-child{border-bottom:none}
+.painel-shape-row:hover{color:var(--accent)}
+.painel-shape-codigo{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--text);min-width:150px}
+.painel-shape-info{color:var(--text-secondary);flex:1}
+.painel-vazio{text-align:center;color:var(--text-secondary);padding:30px;font-size:14px}
+.painel-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+.painel-modal-overlay.aberto{display:flex}
+.painel-modal{background:var(--surface);border-radius:var(--radius-lg);padding:24px;max-width:320px;width:90%;box-shadow:var(--shadow-lg);text-align:center}
+.painel-modal h3{font-size:17px;font-weight:650;margin-bottom:14px}
+.painel-modal-info{font-size:12.5px;color:var(--text-secondary);margin-top:14px;line-height:1.7;text-align:left}
+.painel-modal-info b{color:var(--text);font-weight:600}
+.painel-modal-fechar{margin-top:18px;padding:9px 22px;border-radius:12px;background:var(--text);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer}
+.painel-chip{padding:8px 16px;border-radius:20px;font-weight:600;font-size:13px}
+.painel-chip-aprovados{background:var(--success-soft);color:var(--success)}
+.painel-chip-auditoria{background:var(--warning-soft);color:var(--warning)}
+.painel-chip-reprovados{background:var(--danger-soft);color:var(--danger)}
+
+
+.painel-lista{overflow-x:auto}
+.painel-seta{width:16px;color:var(--text-secondary);font-size:11px}
+tr.painel-linha-acorde{cursor:pointer}
+tr.painel-linha-acorde:hover{background:var(--surface-alt)}
+table.aud-nested{box-shadow:none;border:1px solid var(--border);margin:2px 0;width:100%}
+tr.shape-principal{background:var(--accent-soft)}
+tr.shape-principal td{font-weight:600}
+tr.shape-secundario td:first-child{padding-left:30px;color:var(--text-secondary);font-weight:400}
+tr.shape-principal,tr.shape-secundario{cursor:pointer}
+tr.shape-principal:hover td,tr.shape-secundario:hover td{color:var(--accent)}
+
+
+.painel-acorde-cell{background:var(--surface-alt);vertical-align:middle;border-right:1px solid var(--border);text-align:left}
+.painel-acorde-total{display:block;font-size:11px;color:var(--text-secondary);font-weight:400;margin-top:2px}
+tr.shape-principal td{border-top:2px solid var(--border)}
+
+
+.painel-dif-select{font-size:12.5px;border:1px solid var(--border);border-radius:8px;padding:4px 6px;background:var(--surface);font-family:inherit;color:var(--text)}
+.painel-lock{font-size:11px;margin-left:4px;cursor:default}
+
+
+.painel-acorde-btn{background:none;border:none;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.painel-galeria-modal{background:var(--surface);border-radius:var(--radius-lg);padding:24px;max-width:900px;width:92%;max-height:85vh;box-shadow:var(--shadow-lg);display:flex;flex-direction:column}
+.painel-galeria-modal h3{font-size:18px;font-weight:650;margin-bottom:16px}
+.painel-galeria-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;overflow-y:auto;padding-right:4px}
+.painel-galeria-item{text-align:center}
+.painel-galeria-item-label{font-size:11.5px;color:var(--text-secondary);margin-top:6px;font-family:ui-monospace,Menlo,monospace}
+.painel-galeria-item-rotulo{font-size:11px;color:var(--text-secondary);margin-top:2px}
+
+
+.painel-chip-impossiveis{background:var(--danger-soft);color:var(--danger)}
+
+
+.painel-aprovar-btn{font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;border:1px solid var(--success);background:var(--success-soft);color:var(--success);cursor:pointer}
+.painel-aprovar-btn:hover{background:var(--success);color:#fff}
+
 </style>
 </head>
 <body>
+
+<div class="page-header">
 <h1>🎸 Gerador de Diagramas de Acordes</h1>
-<div class="busca-container">
-<input type="text" id="inputAcorde" placeholder="Ex: F#, Am, C7M, B7..." onkeydown="if(event.key==='Enter')buscarAcorde()">
-<button onclick="buscarAcorde()">Buscar</button>
+<p class="subtitulo">Digitações validadas por múltiplas fontes independentes</p>
 </div>
-<div class="botoes-rapidos">
-<button onclick="buscarRapido('C')">C</button>
-<button onclick="buscarRapido('D')">D</button>
-<button onclick="buscarRapido('E')">E</button>
-<button onclick="buscarRapido('F')">F</button>
-<button onclick="buscarRapido('G')">G</button>
-<button onclick="buscarRapido('A')">A</button>
-<button onclick="buscarRapido('B')">B</button>
-<button onclick="buscarRapido('Am')">Am</button>
-<button onclick="buscarRapido('Em')">Em</button>
-<button onclick="buscarRapido('F#')">F#</button>
-<button onclick="buscarRapido('B7')">B7</button>
-<button onclick="buscarRapido('C7M')">C7M</button>
+
+<div class="tabs-wrap">
+<div class="tabs">
+<button id="tab-aprovados" class="tab-btn ativa" onclick="mostrarAba('aprovados')">Diagramas Aprovados</button>
+<button id="tab-auditoria" class="tab-btn" onclick="mostrarAba('auditoria')">Em Auditoria</button>
+<button id="tab-reprovados" class="tab-btn" onclick="mostrarAba('reprovados')">Reprovados</button>
+<button id="tab-impossiveis" class="tab-btn" onclick="mostrarAba('impossiveis')">Diagramas Impossíveis</button>
 </div>
-<div id="resultado"></div>
+</div>
+
+<div id="secao-painel">
+<div class="painel-busca">
+<input type="text" id="painelBuscaInput" placeholder="Filtrar por acorde... Ex: C, Am, F#7M" oninput="filtrarPainel()">
+</div>
+<div class="painel-resumo">
+<span class="painel-chip" id="painelResumoAcordes">0 acordes</span>
+<span class="painel-chip" id="painelResumoShapes">0 shapes</span>
+</div>
+<div class="painel-lista" id="painelLista"><p class="painel-vazio">Carregando...</p></div>
+</div>
+
+<div class="painel-modal-overlay" id="painelModalOverlay" onclick="if(event.target===this)fecharDiagramaPainel()">
+<div class="painel-modal">
+<h3 id="painelModalTitulo"></h3>
+<div id="painelModalSvg"></div>
+<div class="painel-modal-info" id="painelModalInfo"></div>
+<button class="painel-modal-fechar" onclick="fecharDiagramaPainel()">Fechar</button>
+</div>
+</div>
+
+<div class="painel-modal-overlay" id="painelGaleriaOverlay" onclick="if(event.target===this)fecharGaleriaAcorde()">
+<div class="painel-galeria-modal">
+<h3 id="painelGaleriaTitulo"></h3>
+<div class="painel-galeria-grid" id="painelGaleriaGrid"></div>
+<button class="painel-modal-fechar" onclick="fecharGaleriaAcorde()">Fechar</button>
+</div>
+</div>
+
 <script>
-const CFG={w:190,h:240,mt:35,ml:32,sc:28,st:35,casas:5,r:11};
+const CFG={w:150,h:172,mt:16,ml:30,sc:19,st:24,casas:5,r:8};
 
 function gerarSVG(diagrama,dedos,pestana){
   const c=CFG;
-  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${c.w}" height="${c.h}" viewBox="0 0 ${c.w} ${c.h}">`;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" width="${c.w}" height="${c.h}" viewBox="0 0 ${c.w} ${c.h}" style="display:block;margin:0 auto">`;
   s+=`<rect width="100%" height="100%" fill="#fff"/>`;
-  
+
   const nums=diagrama.map(v=>{let n=parseInt(String(v));return(!isNaN(n)&&n>0)?n:null}).filter(n=>n!==null);
   const minCasa=nums.length?Math.min(...nums):0;
   const maxCasa=nums.length?Math.max(...nums):0;
   const temPestana=pestana&&pestana.casa>0;
-  
-  // LÓGICA DE CASA BASE VISUAL:
-  // - Acorde aberto (minCasa <= 4, sem pestana alta): casaBaseVisual = 0, mostra nut
-  // - Pestana na casa 1: casaBaseVisual = 0, mostra nut
-  // - Pestana na casa 2-3: casaBaseVisual = pestana.casa - 1, MOSTRA NUT + indicador "Xfr"
-  // - Pestana casa >= 4 ou shape alto: casaBaseVisual = minCasa - 1, sem nut, com indicador
+
   let casaBaseVisual=0;
   let mostrarNut=true;
   let mostrarIndicador=false;
   let indicadorCasa=0;
-  
+
   if(temPestana){
     if(pestana.casa<=3){
-      // Pestana próxima ao nut: mostra nut + indicador de casa
       casaBaseVisual=pestana.casa-1;
       mostrarNut=true;
       mostrarIndicador=(pestana.casa>1);
       indicadorCasa=pestana.casa;
     } else {
-      // Pestana alta no braço
       casaBaseVisual=pestana.casa-1;
       mostrarNut=false;
       mostrarIndicador=true;
@@ -93,18 +347,11 @@ function gerarSVG(diagrama,dedos,pestana){
     mostrarIndicador=true;
     indicadorCasa=minCasa;
   } else {
-    // Acorde aberto padrão
     casaBaseVisual=0;
     mostrarNut=true;
     mostrarIndicador=false;
   }
 
-  // CORRECAO GLOBAL (sem hardcoded): a janela visual precisa cobrir a casa
-  // mais alta do shape. Sem isso, casas 6+ eram descartadas no desenho
-  // (cr>c.casas) enquanto os simbolos X/O seguiam o array completo,
-  // gerando "baixo sem ponto" e cordas soantes fantasmas (B/D# shapes 3-8).
-  // Convencao Cifra Club: encostar na casa mais baixa e indicar a casa
-  // inicial quando a janela nao comeca no traste 1.
   if(casaBaseVisual+c.casas<maxCasa){
     casaBaseVisual=minCasa-1;
     if(casaBaseVisual+c.casas<maxCasa)casaBaseVisual=maxCasa-c.casas;
@@ -112,23 +359,15 @@ function gerarSVG(diagrama,dedos,pestana){
     mostrarIndicador=casaBaseVisual>0;
     indicadorCasa=casaBaseVisual+1;
   }
-  
-  // Nut (linha grossa superior)
+
   if(mostrarNut){
-    s+=`<line x1="${c.ml}" y1="${c.mt}" x2="${c.ml+5*c.sc}" y2="${c.mt}" stroke="#000" stroke-width="3"/>`;
+    s+=`<line x1="${c.ml}" y1="${c.mt}" x2="${c.ml+5*c.sc}" y2="${c.mt}" stroke="#1d1d1f" stroke-width="3" stroke-linecap="round"/>`;
   }
-  
-  // Cordas verticais
-  for(let i=0;i<6;i++){let x=c.ml+i*c.sc;s+=`<line x1="${x}" y1="${c.mt}" x2="${x}" y2="${c.mt+c.casas*c.st}" stroke="#000" stroke-width="1"/>`}
-  
-  // Trastes horizontais
-  for(let t=1;t<=c.casas;t++){let y=c.mt+t*c.st;s+=`<line x1="${c.ml}" y1="${y}" x2="${c.ml+5*c.sc}" y2="${y}" stroke="#000" stroke-width="1"/>`}
-  
-  
-  // Barras: pestana (dedo 1) e mini-pestanas (mesmo dedo, mesma casa,
-  // cordas adjacentes - adjacencia garantida pela regra de dedicao do
-  // backend). Toda barra eh rotulada com o numero do dedo (padrao Cifra
-  // Club); cordas cobertas por barra nao ganham bolinha propria.
+
+  for(let i=0;i<6;i++){let x=c.ml+i*c.sc;s+=`<line x1="${x}" y1="${c.mt}" x2="${x}" y2="${c.mt+c.casas*c.st}" stroke="#8e8e93" stroke-width="1"/>`}
+
+  for(let t=1;t<=c.casas;t++){let y=c.mt+t*c.st;s+=`<line x1="${c.ml}" y1="${y}" x2="${c.ml+5*c.sc}" y2="${y}" stroke="#c7c7cc" stroke-width="1"/>`}
+
   const barras=[];
   if(temPestana){
     barras.push({casa:pestana.casa,cMin:Math.min(...pestana.cordas),cMax:Math.max(...pestana.cordas),dedo:dedos?dedos[pestana.cordas[0]]:1});
@@ -153,11 +392,10 @@ function gerarSVG(diagrama,dedos,pestana){
     const cr=b.casa-casaBaseVisual;
     if(cr<1||cr>c.casas)continue;
     const x1=c.ml+b.cMin*c.sc,x2=c.ml+b.cMax*c.sc,yb=c.mt+(cr-0.5)*c.st;
-    s+=`<rect x="${x1-c.r}" y="${yb-6}" width="${x2-x1+2*c.r}" height="12" rx="3" fill="#000"/>`;
-    s+=`<text x="${(x1+x2)/2}" y="${yb+4}" text-anchor="middle" font-size="11" fill="#fff" font-family="Arial" font-weight="bold">${b.dedo}</text>`;
+    s+=`<rect x="${x1-c.r}" y="${yb-6}" width="${x2-x1+2*c.r}" height="12" rx="6" fill="#0071e3"/>`;
+    s+=`<text x="${(x1+x2)/2}" y="${yb+4}" text-anchor="middle" font-size="11" fill="#fff" font-family="-apple-system,Arial" font-weight="600">${b.dedo}</text>`;
   }
 
-  // Bolinhas + dedos (somente cordas fora de qualquer barra)
   for(let i=0;i<6;i++){
     const v=String(diagrama[i]);
     if(v==='X'||v==='x'||v==='0'||v==='-1')continue;
@@ -167,45 +405,56 @@ function gerarSVG(diagrama,dedos,pestana){
     const cr=casa-casaBaseVisual;
     if(cr<1||cr>c.casas)continue;
     const x=c.ml+i*c.sc,y=c.mt+(cr-0.5)*c.st;
-    s+=`<circle cx="${x}" cy="${y}" r="${c.r}" fill="#000"/>`;
+    s+=`<circle cx="${x}" cy="${y}" r="${c.r}" fill="#0071e3"/>`;
     if(dedos&&dedos[i]>0){
-      s+=`<text x="${x}" y="${y+4}" text-anchor="middle" font-size="12" fill="#fff" font-family="Arial" font-weight="bold">${dedos[i]}</text>`;
+      s+=`<text x="${x}" y="${y+4}" text-anchor="middle" font-size="12" fill="#fff" font-family="-apple-system,Arial" font-weight="600">${dedos[i]}</text>`;
     }
   }
 
-  // Indicador de casa à esquerda
   if(mostrarIndicador){
-    s+=`<text x="${c.ml-c.r-6}" y="${c.mt+0.5*c.st+4}" text-anchor="end" font-size="12" font-weight="bold" fill="#000" font-family="Arial">${indicadorCasa}</text>`;
+    s+=`<text x="${c.ml-c.r-6}" y="${c.mt+0.5*c.st+4}" text-anchor="end" font-size="12" font-weight="600" fill="#1d1d1f" font-family="-apple-system,Arial">${indicadorCasa}</text>`;
   }
-  
-  // Indicadores de cordas (padrao Cifra Club) abaixo do diagrama:
-  // X = corda muda | preenchida = baixo do acorde | aberta = demais cordas tocadas
+
   const yInd=c.mt+c.casas*c.st+18;
   let baixoDefinido=false;
   for(let i=0;i<6;i++){
     const x=c.ml+i*c.sc;
     const v=String(diagrama[i]).toUpperCase();
     if(v==='X'||v==='-1'){
-      s+=`<text x="${x}" y="${yInd+5}" text-anchor="middle" font-size="15" font-weight="bold" fill="#000" font-family="Arial">\u2715</text>`;
+      s+=`<text x="${x}" y="${yInd+5}" text-anchor="middle" font-size="15" font-weight="600" fill="#a1a1a6" font-family="-apple-system,Arial">\u2715</text>`;
     }else if(!baixoDefinido){
       baixoDefinido=true;
-      s+=`<circle cx="${x}" cy="${yInd}" r="6" fill="#000"/>`;
+      s+=`<circle cx="${x}" cy="${yInd}" r="6" fill="#1d1d1f"/>`;
     }else{
-      s+=`<circle cx="${x}" cy="${yInd}" r="6" fill="none" stroke="#000" stroke-width="2"/>`;
+      s+=`<circle cx="${x}" cy="${yInd}" r="6" fill="none" stroke="#1d1d1f" stroke-width="2"/>`;
     }
   }
 
   s+='</svg>';return s;
 }
 
-function Diagrama(sh,acorde,i){
-  const titulo=(sh.nome_exato||acorde)+(i>0?' (Shape '+(i+1)+')':'');
+function Diagrama(sh,acorde,i,tambemConhecidoComo){
+  const titulo=acorde+(i>0?' (Shape '+(i+1)+')':'');
+  let aka='';
+  if(tambemConhecidoComo&&tambemConhecidoComo.length){
+    aka='<div class="aka-nomes" title="Mesmo conjunto de notas, nomeado a partir de outra tonica (simetria de tercas menores)">'
+      +'tambem conhecido como: '+tambemConhecidoComo.join(', ')+'</div>';
+  }
   let badge='';
   if(sh.dificuldade&&sh.dificuldade.nivel){
     const n=sh.dificuldade.nivel;
-    badge='<div class="badge-dificuldade nivel-'+n+'" style="width:'+CFG.w+'px" title="Score '+sh.dificuldade.score+'/30 - Rubrica ISMIR 2023 (UC/CFP/CFD/RHC)">Dificuldade: '+n+'/5 - '+sh.dificuldade.rotulo+'</div>';
+    badge='<div class="badge-dificuldade nivel-'+n+'" title="Score '+sh.dificuldade.score+'/30 - Rubrica ISMIR 2023 (UC/CFP/CFD/RHC)">Dif. '+n+'/5 - '+sh.dificuldade.rotulo+'</div>';
   }
-  return `<div class="card-acorde"><h3>${titulo}</h3>${gerarSVG(sh.diagrama,sh.dedos,sh.pestana)}${badge}</div>`;
+  let selo='';
+  if(sh.shape_validado===true){
+    selo='<div class="selo-validacao ok" title="Validado: confirmado por 2+ fontes independentes"></div>';
+  }else if(sh.shape_validado===false){
+    selo='<div class="selo-validacao nao" title="Nao validado: falta confirmacao de uma 2a fonte confiavel para este shape especifico"></div>';
+  }else{
+    selo='<div class="selo-validacao pendente" title="Ainda nao auditado para este tipo de acorde"></div>';
+  }
+  const shapeTexto = '<div class="shape-texto-diagrama" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#6e6e73;text-align:center;margin-top:4px;">'+sh.diagrama.join(',')+'</div>';
+  return `<div class="card-acorde">${selo}<h3>${titulo}</h3>${aka}${gerarSVG(sh.diagrama,sh.dedos,sh.pestana)}${shapeTexto}${badge}</div>`;
 }
 
 async function buscarAcorde(){
@@ -215,21 +464,411 @@ async function buscarAcorde(){
   ct.innerHTML='<p class="mensagem">Buscando...</p>';
   try{
     const resp=await fetch('/gerar?acorde='+encodeURIComponent(acorde));
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const data=await resp.json();
+    const data=await resp.json().catch(function(){return null});
+    if(!resp.ok){
+      const msg=(data&&data.erro)?data.erro:'Cifra não localizada no banco de dados.';
+      ct.innerHTML='<p class="mensagem">'+msg+' Verifique sua digitação.</p>';
+      return;
+    }
     if(!data.diagramas||!data.diagramas.length){ct.innerHTML='<p class="mensagem">Nenhum diagrama encontrado para "'+acorde+'".</p>';return}
-    data.diagramas.sort(function(a,b){
-      const da=a.dificuldade||{},db=b.dificuldade||{};
-      return ((da.nivel||9)-(db.nivel||9))||((da.score||99)-(db.score||99));
-    });
-    const mostrarTodos=ct.dataset.mostrarTodos==='true';
+    if(!data.ambiguidade){
+      data.diagramas.sort(function(a,b){
+        const da=a.dificuldade||{},db=b.dificuldade||{};
+        return ((da.nivel||9)-(db.nivel||9))||((da.score||99)-(db.score||99));
+      });
+    }
+    const mostrarTodos = data.ambiguidade ? true : (ct.dataset.mostrarTodos==='true');
     const shapes=mostrarTodos?data.diagramas:data.diagramas.slice(0,1);
-    let h='<div class="diagramas-container">'+shapes.map((sh,i)=>Diagrama(sh,acorde,i)).join('')+'</div>';
-    if(data.total_diagramas>1&&!mostrarTodos)h+='<div class="ver-mais-container"><button class="ver-mais-btn" onclick="document.getElementById(\'resultado\').dataset.mostrarTodos=\'true\';buscarAcorde()">+'+(data.total_diagramas-1)+' variações</button></div>';
+    let h='';
+    if(data.ambiguidade){
+      h+='<div class="aviso-ambiguidade"><b>Notação ambígua: "'+data.ambiguidade.simbolo_digitado+'"</b><br>'+data.ambiguidade.explicacao+'</div>';
+    }
+    let corpo='<div class="diagramas-container">';
+    const contadorFamilia={};
+    let familiaAnterior=null;
+    shapes.forEach(function(sh){
+      if(data.ambiguidade && sh.familia_rotulo!==familiaAnterior){
+        familiaAnterior=sh.familia_rotulo;
+        corpo+='<div class="familia-header">'+familiaAnterior+'</div>';
+      }
+      const fam=sh.familia||'geral';
+      contadorFamilia[fam]=(contadorFamilia[fam]||0);
+      const idxFamilia=contadorFamilia[fam]++;
+      const base=sh.nome_exibicao||acorde;
+      corpo+=Diagrama(sh,base,idxFamilia,sh.tambem_conhecido_como||data.tambem_conhecido_como);
+    });
+    corpo+='</div>';
+    h+=corpo;
+    if(data.total_diagramas>1&&!mostrarTodos&&!data.ambiguidade)h+='<div class="ver-mais-container"><button class="ver-mais-btn" onclick="document.getElementById(\'resultado\').dataset.mostrarTodos=\'true\';buscarAcorde()">+'+(data.total_diagramas-1)+' variações</button></div>';
     ct.innerHTML=h;ct.dataset.mostrarTodos=mostrarTodos?'true':'false';
-  }catch(e){ct.innerHTML='<p class="mensagem">Erro: '+e.message+'. Verifique se o servidor está rodando.</p>'}
+  }catch(e){ct.innerHTML='<p class="mensagem">Erro: servidor fora do ar ou sem conexão.</p>'}
 }
-function buscarRapido(a){document.getElementById('inputAcorde').value=a;buscarAcorde()}
+
+function buscarRapido(a){
+  document.getElementById('inputAcorde').value=a;
+  filtrarTabela();
+  buscarAcorde();
+}
+
+function selecionarAcorde(acorde, mostrarTodos){
+  document.getElementById('inputAcorde').value = acorde;
+  const ct = document.getElementById('resultado');
+  ct.dataset.mostrarTodos = mostrarTodos ? 'true' : 'false';
+  buscarAcorde();
+  ct.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+let AUD_DADOS=[], AUD_FILTRO='todos', AUD_BUSCA='';
+
+function mostrarAba(aba){
+  const isPainel = ['aprovados','auditoria','reprovados','impossiveis'].includes(aba);
+  document.getElementById('secao-painel').style.display = isPainel ? '' : 'none';
+  ['aprovados','auditoria','reprovados','impossiveis'].forEach(function(a){
+    document.getElementById('tab-'+a).classList.toggle('ativa', aba===a);
+  });
+  if(isPainel) carregarPainel(aba);
+}
+
+async function carregarAuditoria(){
+  const resp = await fetch('/auditoria');
+  const data = await resp.json();
+  AUD_FONTES = data.fontes;
+  AUD_DADOS = data.acordes;
+  renderCabecalhoAuditoria();
+  renderAuditoria();
+}
+function renderCabecalhoAuditoria(){
+  let html = '<th>Acorde</th>';
+  AUD_FONTES.forEach(f => { html += '<th>'+f+'</th>'; });
+  html += '<th>Shapes validados</th><th>Validado</th>';
+  document.getElementById('audHead').innerHTML = html;
+}
+function filtrarTabela(){
+  AUD_BUSCA = document.getElementById('inputAcorde').value.trim().toUpperCase();
+  if(!AUD_BUSCA){
+    document.getElementById('resultado').innerHTML = '<p class="mensagem">Digite um acorde acima, ou clique em uma linha da tabela abaixo \u2014 no nome do acorde para ver o diagrama principal, ou em "Shapes validados" para ver todas as varia\u00e7\u00f5es.</p>';
+  }
+  renderAuditoria();
+}
+function motivoResumido(shapeDet){
+  if(shapeDet.motivo) return shapeDet.motivo;
+  return shapeDet.validado ? 'Validado' : 'Nao validado';
+}
+function rotuloPosicaoShape(shapeStr){
+  const partes = shapeStr.split(',').map(function(p){ return p.trim().toUpperCase(); });
+  const trastes = partes
+    .filter(function(p){ return p !== 'X'; })
+    .map(function(p){ return parseInt(p, 10); })
+    .filter(function(n){ return !isNaN(n); });
+  if(!trastes.length) return '';
+  const minTraste = Math.min.apply(null, trastes);
+  const maxTraste = Math.max.apply(null, trastes);
+  if(maxTraste === 0) return 'Aberto';
+  if(minTraste === 0) return 'Aberto (c/ pestana)';
+  return (minTraste===1?'1\u00aa':minTraste+'\u00aa') + ' casa';
+}
+function renderArvoreShapes(a){
+  const itens = (a.shapes_detalhe||[]).map(function(sh, idx){
+    const cls = sh.validado ? 'ok' : 'nao';
+    const rotulo = 'Shape '+(idx+1);
+    return '<div class="arvore-item">'
+      + '<span class="arvore-ponto '+cls+'"></span>'
+      + '<span class="arvore-shape-posicao">'+rotulo+'</span>'
+      + '<span class="arvore-shape-codigo">'+sh.shape+'</span>'
+      + '<span class="arvore-motivo">'+motivoResumido(sh)+'</span>'
+      + '</div>';
+  }).join('');
+  return '<div class="arvore-shapes">'+itens+'</div>';
+}
+// Metricas da regua dedutiva v2.1 (tabelas criterios/vereditos do auditoria.db)
+const EVO_ANTIGA = {ok:485, total:1802};   // regra antiga: contagem de fontes
+function renderEvolucao(){
+  if(!AUD_DADOS || !AUD_DADOS.length) return;
+  let ok=0, tot=0, rej=0, ina=0;
+  AUD_DADOS.forEach(a => {
+    ok  += (a.shapes_validados||0);
+    tot += (a.total_shapes||0);
+    rej += (a.shapes_rejeitados||0);
+    ina += (a.shapes_inacessiveis||0);
+  });
+  const corretos = ok + ina;                 // harmonia correta (inclui fora de alcance)
+  const pct = tot ? (corretos/tot*100) : 0;
+  const acOk = AUD_DADOS.filter(a=>a.validado).length;
+  document.getElementById('evoNum').textContent = corretos + ' / ' + tot;
+  document.getElementById('evoSub').textContent =
+    'shapes harmonicamente corretos (' + pct.toFixed(1) + '%)';
+  document.getElementById('evoBarra').style.width = pct.toFixed(1)+'%';
+  const el = document.getElementById('evoDelta');
+  el.textContent = acOk + '/' + AUD_DADOS.length + ' acordes sem nenhum shape rejeitado';
+  el.style.color = '#30d158';
+  document.getElementById('evoMarcos').innerHTML =
+      '<b>'+ok+'</b> validos &nbsp;\u00b7&nbsp; <b>'+ina+'</b> corretos mas fora do alcance pratico '
+    + '&nbsp;\u00b7&nbsp; <b>'+rej+'</b> rejeitados por erro harmonico<br>'
+    + '<span style="color:#a1a1a6">Criterio: regua dedutiva v2.1 \u2014 harmonia (notas, fundamental, '
+    + 'terca, quinta conforme o tipo) + executabilidade (abertura \u2264 4 trastes). '
+    + 'Fontes externas sao metadado de popularidade e cross-check, nao criterio de verdade.<br>'
+    + 'Shapes fisicamente impossiveis (traste 12+) ficam FORA desta conta \u2014 '
+    + 'veja a aba \"Diagramas Impossiveis\".<br>'
+    + 'A regra anterior (\u22652 fontes confirmando) marcava '+EVO_ANTIGA.ok+'/'+EVO_ANTIGA.total
+    + ' \u2014 nao e comparavel: media outra coisa.</span>';
+}
+function renderAuditoria(){
+  renderEvolucao();
+  const ok = AUD_DADOS.filter(a=>a.validado).length;
+  const nao = AUD_DADOS.length - ok;
+  const pct = AUD_DADOS.length ? (ok/AUD_DADOS.length*100) : 0;
+  document.getElementById('audOk').textContent = '\u2714 '+ok+' validados';
+  document.getElementById('audNao').textContent = '\u2718 '+nao+' n\u00e3o validados';
+  document.getElementById('audPct').textContent = pct.toFixed(1)+'% de 100%';
+  const linhas = AUD_DADOS.filter(a => {
+    const passaFiltro = AUD_FILTRO==='todos' || (AUD_FILTRO==='ok' ? a.validado : !a.validado);
+    const passaBusca = !AUD_BUSCA || a.acorde.toUpperCase().includes(AUD_BUSCA);
+    return passaFiltro && passaBusca;
+  });
+  const tick = v => v ? '<span class="tick-ok">\u2714</span>' : '<span class="tick-x">\u2718</span>';
+  // Coluna de fonte: ausencia de cobertura NAO e' reprovacao. Fonte que nao
+  // cataloga o acorde mostra traco cinza, nao X vermelho.
+  const tickFonte = v => v ? '<span class="tick-ok">\u2714</span>'
+    : '<span style="color:#c7c7cc" title="Esta fonte nao cataloga este acorde">\u2013</span>';
+  document.getElementById('audBody').innerHTML = linhas.map(a => {
+    // reprovado comeca aberto (mostra o motivo direto), aprovado comeca fechado
+    const aberto = !a.validado;
+    const seta = '<span class="toggle-arvore">'+(aberto?'\u25be':'\u25b8')+'</span>';
+    let cols = '<td class="clicavel" data-modo="unico">'+seta+' <b>'+a.acorde+'</b></td>';
+    AUD_FONTES.forEach(f => { cols += '<td>'+tickFonte(a.por_fonte[f])+'</td>'; });
+    cols += '<td class="clicavel" data-modo="todos">'+a.shapes_validados+'/'+a.total_shapes+'</td>';
+    cols += '<td>'+tick(a.validado)+'</td>';
+    let html = '<tr data-acorde="'+a.acorde+'" class="linha-acorde">'+cols+'</tr>';
+    html += '<tr class="linha-shapes-detalhe" data-acorde-detalhe="'+a.acorde+'" style="display:'+(aberto?'table-row':'none')+'">'
+      + '<td colspan="'+(AUD_FONTES.length+3)+'">'+renderArvoreShapes(a)+'</td></tr>';
+    return html;
+  }).join('');
+}
+function filtrarAuditoria(f){
+  AUD_FILTRO = f;
+  ['todos','ok','nao'].forEach(x => document.getElementById('f-'+x).classList.toggle('ativo', x===f));
+  renderAuditoria();
+}
+
+async function carregarCobertura(){
+  const resp = await fetch('/cobertura');
+  const data = await resp.json();
+  document.getElementById('covSuportados').textContent = data.total_suportados;
+  document.getElementById('covReferencia').textContent = data.total_referencia;
+  document.getElementById('covPct').textContent = data.percentual + '%';
+  document.getElementById('covLista').innerHTML = data.tipos_faltando.map(t =>
+    '<div class="cov-item' + (t.prioritario ? ' prioritario' : '') + '">' +
+      '<span><span class="cov-nome">' + t.label + '</span><span class="cov-suffix">(' + t.suffix + ')</span></span>' +
+      (t.prioritario ? '<span class="cov-badge-prioridade">Prioridade alta</span>' : '') +
+    '</div>'
+  ).join('');
+}
+
+const PAINEL_CACHE={};
+let PAINEL_ATIVO='aprovados';
+let PAINEL_LISTA_ATUAL=[];
+let NIVEIS_CACHE=null;
+
+async function carregarPainel(status){
+  PAINEL_ATIVO=status;
+  if(!PAINEL_CACHE[status]){
+    document.getElementById('painelLista').innerHTML='<p class="painel-vazio">Carregando...</p>';
+    const resp=await fetch('/painel?status='+status);
+    PAINEL_CACHE[status]=await resp.json();
+  }
+  if(status==='aprovados' && !NIVEIS_CACHE){
+    const respN=await fetch('/dificuldade/niveis');
+    NIVEIS_CACHE=await respN.json();
+  }
+  renderPainel();
+}
+
+function filtrarPainel(){
+  renderPainel();
+}
+
+function renderPainel(){
+  const data=PAINEL_CACHE[PAINEL_ATIVO];
+  if(!data) return;
+  const busca=document.getElementById('painelBuscaInput').value.trim().toUpperCase();
+  const acordes=busca ? data.acordes.filter(function(a){return a.acorde.toUpperCase().startsWith(busca)}) : data.acordes;
+  document.getElementById('painelResumoAcordes').className='painel-chip painel-chip-'+PAINEL_ATIVO;
+  document.getElementById('painelResumoShapes').className='painel-chip painel-chip-'+PAINEL_ATIVO;
+  document.getElementById('painelResumoAcordes').textContent=data.total_acordes+' acordes';
+  document.getElementById('painelResumoShapes').textContent=data.total_shapes+' shapes';
+  if(!acordes.length){
+    document.getElementById('painelLista').innerHTML='<p class="painel-vazio">Nenhum acorde encontrado.</p>';
+    PAINEL_LISTA_ATUAL=[];
+    return;
+  }
+  acordes.forEach(function(a){
+    a.shapes = a.shapes.slice().sort(function(x,y){return x.dificuldade.score - y.dificuldade.score;});
+  });
+  const linhas=acordes.map(function(a,ai){
+    return a.shapes.map(function(sh,si){
+      const cls = si===0 ? 'shape-principal' : 'shape-secundario';
+      const acordeCell = si===0
+        ? '<td class="painel-acorde-cell" rowspan="'+a.shapes.length+'"><b>'+a.acorde+'</b><br><button class="painel-acorde-btn" onclick="event.stopPropagation();abrirGaleriaAcorde('+ai+')">'+a.total_shapes+' shape'+(a.total_shapes!==1?'s':'')+'</button></td>'
+        : '';
+      const celDificuldade = celulaDificuldade(sh,ai,si);
+      const celAcao = PAINEL_ATIVO==='auditoria'
+        ? '<td><button class="painel-aprovar-btn" onclick="event.stopPropagation();confirmarAprovacaoManual('+ai+','+si+')">\u2714 Aprovar</button></td>'
+        : '';
+      return '<tr class="'+cls+'" onclick="abrirDiagramaPainel('+ai+','+si+')">'
+        + acordeCell
+        + '<td>'+sh.shape+'</td>'
+        + '<td>'+formatDedos(sh.dedos)+'</td>'
+        + '<td>'+formatPestana(sh.pestana)+'</td>'
+        + celDificuldade
+        + celAcao
+        + '</tr>';
+    }).join('');
+  }).join('');
+  const thAcao = PAINEL_ATIVO==='auditoria' ? '<th>Ação</th>' : '';
+  document.getElementById('painelLista').innerHTML =
+    '<table class="aud"><thead><tr><th>Acorde</th><th>Digitação</th><th>Dedos</th><th>Pestana</th><th>Dificuldade</th>'+thAcao+'</tr></thead><tbody>'+linhas+'</tbody></table>';
+  PAINEL_LISTA_ATUAL=acordes;
+}
+
+function celulaDificuldade(sh,ai,si){
+  if(PAINEL_ATIVO!=='aprovados' || !NIVEIS_CACHE){
+    return '<td>'+sh.dificuldade.rotulo+'</td>';
+  }
+  const opts=NIVEIS_CACHE.map(function(n){
+    return '<option value="'+n.nivel+'"'+(n.nivel===sh.dificuldade.nivel?' selected':'')+'>'+n.rotulo+'</option>';
+  }).join('');
+  const cadeado = sh.dificuldade_travada ? ' <span class="painel-lock" title="Definido manualmente - nao muda por validacao automatica">\ud83d\udd12</span>' : '';
+  return '<td><select class="painel-dif-select" onclick="event.stopPropagation()" onchange="alterarDificuldade('+ai+','+si+',this.value)">'+opts+'</select>'+cadeado+'</td>';
+}
+
+async function alterarDificuldade(ai,si,novoNivel){
+  const a=PAINEL_LISTA_ATUAL[ai];
+  const sh=a.shapes[si];
+  const nivel=parseInt(novoNivel,10);
+  try{
+    const resp=await fetch('/dificuldade/definir',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({acorde:a.acorde,shape:sh.shape,regra_versao:sh.regra_versao,nivel:nivel})
+    });
+    const data=await resp.json();
+    if(!resp.ok || !data.ok){
+      alert('Erro ao salvar dificuldade: '+(data.erro||'desconhecido'));
+      renderPainel();
+      return;
+    }
+    sh.dificuldade.nivel=data.nivel;
+    sh.dificuldade.rotulo=data.rotulo;
+    sh.dificuldade_travada=true;
+    renderPainel();
+  }catch(err){
+    alert('Erro de rede ao salvar dificuldade');
+  }
+}
+
+function formatDedos(dedos){
+  if(!dedos) return '\u2013';
+  return dedos.map(function(d){return d>0?d:'\u2013'}).join(' ');
+}
+
+function formatPestana(pestana){
+  if(!pestana) return '\u2013';
+  return pestana.casa+'\u00aa casa';
+}
+
+function infoResumoPainel(sh){
+  if(PAINEL_ATIVO==='aprovados'){
+    return sh.dificuldade.rotulo+' \u00b7 '+sh.n_fontes_confiaveis+' fonte(s)';
+  }
+  if(PAINEL_ATIVO==='auditoria'){
+    return sh.motivo || 'Sem 2 fontes confirmando';
+  }
+  return (sh.motivos||[]).map(function(m){return m.codigo}).join(', ');
+}
+
+function abrirDiagramaPainel(ai,si){
+  const a=PAINEL_LISTA_ATUAL[ai];
+  const sh=a.shapes[si];
+  document.getElementById('painelModalTitulo').textContent=a.acorde;
+  document.getElementById('painelModalSvg').innerHTML=gerarSVG(sh.diagrama,sh.dedos,sh.pestana);
+  document.getElementById('painelModalInfo').innerHTML=infoDetalhePainel(sh);
+  document.getElementById('painelModalOverlay').classList.add('aberto');
+}
+
+function infoDetalhePainel(sh){
+  let h='<b>Digitação:</b> '+sh.shape+'<br><b>Dificuldade:</b> '+sh.dificuldade.rotulo+'<br>';
+  if(PAINEL_ATIVO==='aprovados'){
+    h+='<b>Fontes confiáveis:</b> '+sh.n_fontes_confiaveis+'<br><b>Veredito:</b> '+sh.veredito_original;
+  } else if(PAINEL_ATIVO==='auditoria'){
+    h+='<b>Motivo:</b> '+(sh.motivo||'-');
+  } else {
+    h+='<b>Veredito:</b> '+sh.veredito_original+'<br><b>Motivos:</b><br>'+(sh.motivos||[]).map(function(m){return '&bull; '+m.detalhe}).join('<br>');
+  }
+  return h;
+}
+
+function abrirGaleriaAcorde(ai){
+  const a=PAINEL_LISTA_ATUAL[ai];
+  document.getElementById('painelGaleriaTitulo').textContent=a.acorde+' \u2014 '+a.shapes.length+' shapes';
+  document.getElementById('painelGaleriaGrid').innerHTML=a.shapes.map(function(sh){
+    return '<div class="painel-galeria-item">'
+      + gerarSVG(sh.diagrama,sh.dedos,sh.pestana)
+      + '<div class="painel-galeria-item-label">'+sh.shape+'</div>'
+      + '<div class="painel-galeria-item-rotulo">'+sh.dificuldade.rotulo+'</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('painelGaleriaOverlay').classList.add('aberto');
+}
+
+async function confirmarAprovacaoManual(ai,si){
+  const a=PAINEL_LISTA_ATUAL[ai];
+  const sh=a.shapes[si];
+  const ok=confirm('Quer mesmo aprovar este diagrama?\n\n'+a.acorde+' - '+sh.shape+'\n\nEle passa a valer como Diagrama Aprovado, sem exigir 2 fontes. Decisao registrada e definitiva.');
+  if(!ok) return;
+  try{
+    const resp=await fetch('/shapes/aprovar_manual',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({acorde:a.acorde,shape:sh.shape,regra_versao:sh.regra_versao})
+    });
+    const data=await resp.json();
+    if(!resp.ok || !data.ok){
+      alert('Erro ao aprovar: '+(data.erro||'desconhecido'));
+      return;
+    }
+    a.shapes.splice(si,1);
+    a.total_shapes=a.shapes.length;
+    const cache=PAINEL_CACHE['auditoria'];
+    if(cache){
+      cache.total_shapes--;
+      if(a.shapes.length===0){
+        cache.acordes=cache.acordes.filter(function(x){return x!==a});
+        cache.total_acordes--;
+      }
+    }
+    delete PAINEL_CACHE['aprovados'];
+    renderPainel();
+  }catch(err){
+    alert('Erro de rede ao aprovar');
+  }
+}
+
+function fecharGaleriaAcorde(){
+  document.getElementById('painelGaleriaOverlay').classList.remove('aberto');
+}
+
+function fecharDiagramaPainel(){
+  document.getElementById('painelModalOverlay').classList.remove('aberto');
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){
+    fecharDiagramaPainel();
+    fecharGaleriaAcorde();
+  }
+});
+
+carregarPainel('aprovados');
 </script>
 </body>
 </html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Acordes - DEBUG JSON</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 { color: #4ecca3; margin-bottom: 0.5rem; }
+        .subtitle { color: #888; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 1.2rem;
+            border: 2px solid #4ecca3;
+            border-radius: 8px;
+            background: #16213e;
+            color: #fff;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            background: #4ecca3;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #3db892; }
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+        .status.ok { background: #0f3d2e; color: #4ecca3; }
+        .status.err { background: #3d0f0f; color: #ff6b6b; }
+        .status.loading { background: #2a2a4a; color: #ffd93d; }
+        pre {
+            background: #0f0f23;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .key { color: #ff79c6; }
+        .string { color: #f1fa8c; }
+        .number { color: #bd93f9; }
+        .boolean { color: #8be9fd; }
+        .diagram-highlight {
+            background: #4ecca3;
+            color: #1a1a2e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .quick-tests {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+        .quick-tests button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+        .note {
+            background: #16213e;
+            border-left: 3px solid #4ecca3;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎸 Gerador de Acordes - DEBUG</h1>
+    <p class="subtitle">Frontend MINIMO - exibe JSON cru do backend sem nenhuma filtragem</p>
+
+    <div class="note">
+        ⚠️ Este modo NAO renderiza SVG. Apenas mostra EXATAMENTE o que o backend retorna.
+        Se o backend retorna <code>['X','3','2','0','1','0']</code>, voce vera isso aqui em destaque.
+    </div>
+
+    <div class="quick-tests">
+        <button onclick="buscar('C')">C</button>
+        <button onclick="buscar('G')">G</button>
+        <button onclick="buscar('Am')">Am</button>
+        <button onclick="buscar('F')">F</button>
+        <button onclick="buscar('Dm')">Dm</button>
+        <button onclick="buscar('E')">E</button>
+        <button onclick="buscar('Em')">Em</button>
+        <button onclick="buscar('A')">A</button>
+        <button onclick="buscar('B7')">B7</button>
+        <button onclick="buscar('F7M(11+)/C')">F7M(11+)/C</button>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="acordeInput" placeholder="Digite o acorde (ex: C, G, Am, F7M)" value="C">
+        <button onclick="buscar()">Buscar</button>
+    </div>
+
+    <div id="status"></div>
+    <pre id="output">Aguardando requisicao...</pre>
+
+    <script>
+        const input = document.getElementById('acordeInput');
+        const output = document.getElementById('output');
+        const statusDiv = document.getElementById('status');
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscar();
+        });
+
+        function setStatus(msg, type) {
+            statusDiv.className = 'status ' + type;
+            statusDiv.textContent = msg;
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(
+                /("(\u[a-zA-Z0-9]{4}|\[^u]|[^\"])*"(\s*:)?|(true|false|null)|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+                function (match) {
+                    let cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) cls = 'key';
+                        else cls = 'string';
+                    } else if (/true|false/.test(match)) cls = 'boolean';
+                    else if (/null/.test(match)) cls = 'boolean';
+                    return '<span class="' + cls + '">' + match + '</span>';
+                }
+            );
+        }
+
+        async function buscar(acorde) {
+            const nome = acorde || input.value.trim();
+            if (!nome) return;
+            if (!acorde) input.value = nome;
+
+            setStatus('Carregando...', 'loading');
+            output.innerHTML = '';
+
+            // Adiciona timestamp para BURLAR cache do navegador
+            const url = `/gerar?acorde=${encodeURIComponent(nome)}&_t=${Date.now()}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.erro) {
+                    setStatus(`ERRO: ${data.erro}`, 'err');
+                    output.textContent = JSON.stringify(data, null, 2);
+                    return;
+                }
+
+                setStatus(
+                    `OK | Acorde: "${data.acorde}" | Total diagramas: ${data.total_diagramas}`,
+                    'ok'
+                );
+
+                // Destaca o array "diagrama" no JSON para facilitar leitura
+                let raw = JSON.stringify(data, null, 2);
+                // Destaca visualmente o array de diagrama
+                raw = raw.replace(
+                    /("diagrama":\s*\[)([^\]]+)(\])/g,
+                    '$1<span class="diagram-highlight">$2</span>$3'
+                );
+
+                output.innerHTML = syntaxHighlight(raw);
+
+            } catch (err) {
+                setStatus(`FALHA NA REQUISICAO: ${err.message}`, 'err');
+                output.textContent = err.stack || err.message;
+            }
+        }
+
+        // Busca automatico ao carregar
+        buscar('C');
+    </script>
+</body>
+</html>

@@ -123,6 +123,37 @@ def _nivel_rhc(diagrama):
     return 3
 
 
+def _padrao_dois_blocos(diagrama, dedos, pestana):
+    """Dois pares de dedos distintos, casas separadas por gap, sem pestana.
+
+    Criterio do usuario (musico, 2026-08-08). Conta DEDOS, nao casas:
+    varias notas do mesmo dedo sao pestana, nao bloco."""
+    from collections import defaultdict
+    if pestana:
+        return False
+    casa_por_dedo = {}
+    for v, d in zip(diagrama or [], dedos or []):
+        s = str(v).upper()
+        if s in ("X", "-1", "0") or not d or d == 0:
+            continue
+        try:
+            casa_por_dedo[d] = int(s)
+        except ValueError:
+            continue
+    if len(casa_por_dedo) < 4:
+        return False
+    por_casa = defaultdict(list)
+    for d, c in casa_por_dedo.items():
+        por_casa[c].append(d)
+    pares = sorted(c for c, ds in por_casa.items() if len(ds) >= 2)
+    if len(pares) < 2:
+        return False
+    for i in range(len(pares) - 1):
+        if pares[i + 1] - pares[i] - 1 >= 1:
+            return True
+    return False
+
+
 def avaliar_dificuldade(diagrama, dedos=None, pestana=None,
                         tonica=None, tipo=None):
     """Avalia dificuldade pela rubrica ISMIR 2023. Score 0-30, nivel 1-5."""
@@ -144,6 +175,9 @@ def avaliar_dificuldade(diagrama, dedos=None, pestana=None,
         if score <= max_s:
             nivel, rotulo = n, r
             break
+
+    if _padrao_dois_blocos(diagrama, dedos, pestana):
+        nivel, rotulo = 5, "Muito Dificil"
 
     return {"score": score, "nivel": nivel, "rotulo": rotulo,
             "detalhes": {"UC": uc, "CFP": cfp, "CFD": cfd, "RHC": rhc}}

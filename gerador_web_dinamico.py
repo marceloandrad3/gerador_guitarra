@@ -52,6 +52,37 @@ from dedicacao import calcular_dedos_e_pestana, shape_tocavel
 from validacao import shape_valido, diagrama_valido
 from dificuldade import avaliar_dificuldade
 
+# Sinonimos de notacao para o mesmo tipo de acorde. O simbolo de grau (°)
+# e a letra "o" sao notacao padrao para diminuto em apps/livros de cifra;
+# nosso dicionario TIPOS usa "dim"/"dim7" como chave canonica.
+TIPO_SINONIMOS = {
+    "\u00b0": "dim", "o": "dim", "O": "dim",
+    "\u00b07": "dim7", "o7": "dim7", "O7": "dim7",
+    # "+" e "+5" sao notacao padrao para aumentado (Cifra Club, Almir
+    # Chediak "Dicionario de Acordes Cifrados"). Sem ambiguidade
+    # documentada (diferente do "dim/dim7"), entao mapeia direto.
+    "+": "aug", "+5": "aug",
+    # "4" e notacao abreviada padrao para sus4 (Cifra Club, Almir
+    # Chediak "Dicionario de Acordes Cifrados", Ultimate Guitar).
+    "4": "sus4",
+}
+
+def sufixo_bruto(nome):
+    """Sufixo de tipo tal como foi digitado, ANTES do TIPO_SINONIMOS.
+    Usado so' para detectar ambiguidade de notacao."""
+    nome = nome.strip()
+    if len(nome) >= 2 and nome[1] in ['#','b']:
+        return nome[2:]
+    return nome[1:]
+
+SUFIXOS_AMBIGUOS_DIM = {"\u00b0", "o", "O"}
+
+def eh_ambiguo_dim(nome):
+    """True quando o simbolo digitado (° ou 'o' isolado) e' ambiguo entre
+    a triade diminuta (3 notas) e a tetrade dim7 (4 notas). '°7'/'o7' NAO
+    sao ambiguos - ja apontam direto pra dim7."""
+    return sufixo_bruto(nome) in SUFIXOS_AMBIGUOS_DIM
+
 def parse_acorde(nome):
     nome = nome.strip()
     if len(nome) >= 2 and nome[1] in ['#','b']:
@@ -62,6 +93,7 @@ def parse_acorde(nome):
         tipo = nome[1:] if len(nome)>1 else ""
     bemol_map = {"Db":"C#","Eb":"D#","Gb":"F#","Ab":"G#","Bb":"A#"}
     tonica = bemol_map.get(tonica, tonica)
+    tipo = TIPO_SINONIMOS.get(tipo, tipo)
     return tonica, tipo
 
 def parsear_inversao(nome_acorde):
@@ -137,6 +169,7 @@ CAGED_MAIOR = {
     "D": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 3, 2]},
     "C": {"raiz_corda": 1, "offsets": [None, 0, -1, -3, -2, -3]},
     "G": {"raiz_corda": 0, "offsets": [0, -1, -3, -3, -3, 0]},
+    "G_var1": {"raiz_corda": 0, "offsets": [0, -1, -3, -3, 0, None]},  # var G: 2a corda na raiz, 1a omitida (auditoria JGuitar id=6)
 }
 
 CAGED_MENOR = {
@@ -162,6 +195,17 @@ CAGED_DOMINANTE9 = {
     "E9": {"raiz_corda": 0, "offsets": [0, 2, 0, 1, 0, 2]},          # E9 020102 (Wikipedia Gm9 353335 c/ 3a maior = G9 353435)
 }
 
+# Diminuto (triade simetrica m3+m3 — Wikipedia "Diminished triad").
+# Shapes-fonte: JGuitar (auditoria 2026-08-06, acorde Cdim), cada offset
+# verificado nota a nota. Transpostos para as 12 tonicas como os demais.
+CAGED_DIM = {
+    "Edim":     {"raiz_corda": 0, "offsets": [0, 1, 2, 0, None, None]},      # 8,9,10,8,X,X
+    "Adim":     {"raiz_corda": 1, "offsets": [None, 0, 1, 2, 1, None]},      # X,3,4,5,4,X
+    "Ddim":     {"raiz_corda": 2, "offsets": [None, None, 0, 1, 3, 1]},      # X,X,10,11,13,11
+    "Ddim_inv": {"raiz_corda": 2, "offsets": [None, None, 0, -2, -3, -2]},   # X,X,10,8,7,8
+    "Gdim":     {"raiz_corda": 3, "offsets": [None, None, None, 0, -1, -3]}, # X,X,X,5,4,2
+}
+
 CAGED_MAIOR7 = {
     "C7M": {"raiz_corda": 1, "offsets": [None, 0, -1, -3, -3, -3]},  # Cmaj7 X32000
     "D7M": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 2, 2]},   # Dmaj7 XX0222
@@ -178,6 +222,47 @@ CAGED_MENOR7 = {
     "Bm7": {"raiz_corda": 1, "offsets": [None, 0, -2, 0, -2, 0]},    # Bm7  X20202
     "F#m7": {"raiz_corda": 0, "offsets": [0, -2, 0, 0, 0, -2]},      # F#m7 202220
 }
+
+# Shapes derivados de dados REAIS confirmados por >=2 fontes independentes
+# (JGuitar + chords-db, cruzados no nosso banco de auditoria.db a partir de
+# C, D e G como tonicas-amostra). Cada offset foi calculado a mao a partir
+# do shape exato retornado pelas fontes, nao inventado.
+CAGED_SEXTA = {
+    "Csexta": {"raiz_corda": 1, "offsets": [None, 0, -1, -1, -2, -3]},  # C6  X32210 (JGuitar/chords-db)
+    "Dsexta": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 0, 2]},   # D6  XX0202 (JGuitar/chords-db)
+    "Gsexta": {"raiz_corda": 0, "offsets": [0, -1, -3, -3, -3, -3]},    # G6  320000 (JGuitar/chords-db)
+}
+
+CAGED_MENOR6 = {
+    "Cm6": {"raiz_corda": 1, "offsets": [None, 0, -2, -1, -2, 0]},   # Cm6 X31213->X,3,1,2,1,3 (JGuitar/chords-db)
+    "Dm6": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 0, 1]},   # Dm6 XX0201 (JGuitar/chords-db)
+}
+
+CAGED_SUS2 = {
+    "Csus2": {"raiz_corda": 1, "offsets": [None, 0, -3, -3, -2, 0]},  # Csus2 X,3,0,0,1,3 (JGuitar/chords-db)
+    "Dsus2": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 3, 0]},  # Dsus2 XX0230 (JGuitar/chords-db)
+    "Gsus2": {"raiz_corda": 0, "offsets": [0, -3, -3, -3, 0, 0]},     # Gsus2 300033 (JGuitar/chords-db)
+}
+
+CAGED_SUS4 = {
+    "Csus4": {"raiz_corda": 1, "offsets": [None, 0, 0, -3, -2, -2]},  # Csus4 X,3,3,0,1,1 (JGuitar/chords-db)
+    "Dsus4": {"raiz_corda": 2, "offsets": [None, None, 0, 2, 3, 3]},  # Dsus4 XX0233 (JGuitar/chords-db)
+    "Gsus4": {"raiz_corda": 0, "offsets": [0, 0, -3, -3, -2, 0]},     # Gsus4 330013 (JGuitar/chords-db)
+}
+
+CAGED_DIM7 = {
+    "Cdim7": {"raiz_corda": 1, "offsets": [None, 0, 1, -1, 1, -1]},   # Cdim7 X,3,4,2,4,2 (JGuitar/chords-db)
+    "Ddim7": {"raiz_corda": 2, "offsets": [None, None, 0, 1, 0, 1]},  # Ddim7 XX0101 (JGuitar/chords-db)
+    # Raiz na 6a corda (Mi grave). Verificado manualmente pelo usuario (musico,
+    # 2026-08-07) a partir do shape A dim7 = 5,X,4,5,4,X (raiz A no traste 5).
+    # Conferido nota-a-nota: A-F#-C-D#, cadeia de tercas menores correta.
+    "Gdim7": {"raiz_corda": 0, "offsets": [0, None, -1, 0, -1, None]},
+}
+
+CAGED_AUG = {
+    "Daug": {"raiz_corda": 2, "offsets": [None, None, 0, 3, 3, 2]},   # Daug XX0332 (JGuitar/chords-db)
+}
+
 
 
 
@@ -216,9 +301,30 @@ def gerar_shapes_dinamicos(tonica, tipo):
     elif tipo == "m7":
         templates = CAGED_MENOR7
         ordem = ["Em7", "Am7", "Dm7", "Bm7", "F#m7"]
+    elif tipo == "dim":
+        templates = CAGED_DIM
+        ordem = ["Edim", "Adim", "Ddim", "Ddim_inv", "Gdim"]
+    elif tipo == "dim7":
+        templates = CAGED_DIM7
+        ordem = ["Cdim7", "Ddim7", "Gdim7"]
+    elif tipo == "aug":
+        templates = CAGED_AUG
+        ordem = ["Daug"]
+    elif tipo == "sus2":
+        templates = CAGED_SUS2
+        ordem = ["Csus2", "Dsus2", "Gsus2"]
+    elif tipo == "sus4":
+        templates = CAGED_SUS4
+        ordem = ["Csus4", "Dsus4", "Gsus4"]
+    elif tipo == "6":
+        templates = CAGED_SEXTA
+        ordem = ["Csexta", "Dsexta", "Gsexta"]
+    elif tipo == "m6":
+        templates = CAGED_MENOR6
+        ordem = ["Cm6", "Dm6"]
     else:
         templates = CAGED_MAIOR
-        ordem = ["E", "A", "D", "C", "G"]
+        ordem = ["E", "A", "D", "C", "G", "G_var1"]
 
     shapes = []
     for nome_shape in ordem:
@@ -228,7 +334,7 @@ def gerar_shapes_dinamicos(tonica, tipo):
         afinacao_raiz = CORDAS_AFINACAO[raiz_corda]
 
         encontrado = False
-        for casa_tonica in range(0, 16):
+        for casa_tonica in range(0, 21):
             nota_na_casa = (afinacao_raiz + casa_tonica) % 12
             if nota_na_casa != tonica_idx:
                 continue
@@ -241,7 +347,7 @@ def gerar_shapes_dinamicos(tonica, tipo):
                     casas.append(None)
                 else:
                     c = casa_tonica + off
-                    if c < 0 or c > 15:
+                    if c < 0 or c > 20:
                         valido = False
                         break
                     casas.append(c)
@@ -279,7 +385,6 @@ def gerar_shapes_dinamicos(tonica, tipo):
             })
 
             encontrado = True
-            break
 
     return shapes
 
@@ -331,7 +436,15 @@ def gerar_slash_construtivo(tonica, tipo, nota_baixo_str):
         if chave in vistos:
             return
         casas = [int(v) for v in diag if v != 'X']
-        if len(casas) < 4 or max(casas) - min(casas) > 4:
+        # span = casas ocupadas (inclusivo), mesma convencao da regua
+        # v2.1/v2.2 provada 1811/1811: 4 casas => max-min <= 3.
+        # Casa >= 12 fora por regra settled (shape impossivel).
+        presos = [c for c in casas if c > 0]
+        if presos and (max(presos) - min(presos) + 1) > 4:
+            return
+        if max(casas) >= 12:
+            return
+        if len(casas) < 4:
             return
         if not diagrama_valido(list(diag), CORDAS_AFINACAO, notas_acorde, toleradas):
             return

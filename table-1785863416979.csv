@@ -1,0 +1,5 @@
+﻿Arquivo,Descrição
+[servidor.py](sandbox:///mnt/agents/output/servidor.py),Servidor com diretório garantido e anti-cache
+[index\_minimo.html](sandbox:///mnt/agents/output/index_minimo.html),**Teste primeiro** — apenas JSON cru
+[index.html](sandbox:///mnt/agents/output/index.html),Completo com SVG (use após confirmar o JSON)
+[README.md](sandbox:///mnt/agents/output/README.md),Instruções detalhadas

@@ -1,35 +1,12 @@
-# Python
+# Backups de sessão — locais, não versionados
+*.bak
+*.bak.*
+*.bak_*
+_backup_rename_*/
 __pycache__/
 *.pyc
-*.bak
-
-# Sistema
 .DS_Store
-
-# Runtime
-servidor.log
-
-# Geradores antigos (substituidos por gerador_web_dinamico.py)
-gerador_acordes.py
-gerador_completo_dinamico.py
-gerador_universal_100.py
-gerador_web_dinamico_backup.py
-
-# Scripts pontuais de sessoes passadas
-corrigir_*.py
-patch_*.py
-consertar_erro.py
-atualizar_frontend.py
-reiniciar_e_corrigir.py
-debug_e_shape.py
-testar_busca.py
-test_caged_templates.py
-diagnostico_v1.py
-validacao.py
-
-# Backups e dados nao usados em runtime
 backup_*/
-index_minimo.html
-acordes.json
-todos_acordes.json
-table-*.csv
+backups/
+auditoria_backup_*.db
+*_backup.py
