@@ -10,3 +10,9 @@ backup_*/
 backups/
 auditoria_backup_*.db
 *_backup.py
+
+# Dados gerados (banco de shapes e dicionario exportado) - so' local.
+# Codigo-fonte que os produz (gerador_teoria.py, exportar_cifras_facil.py
+# etc.) continua versionado normalmente.
+auditoria.db
+cifras_facil_chord_dictionary.json
