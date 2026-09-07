@@ -25,7 +25,7 @@ from gerador_web_dinamico import (
 )
 
 DB = "auditoria.db"
-REGRAS = ("v2.1-dedutiva", "v2.2-dedutiva")
+REGRAS = ("v2.1-dedutiva", "v2.2-dedutiva", "v-teoria-forca-bruta-1.0")
 SAIDA = "cifras_facil_chord_dictionary.json"
 
 
